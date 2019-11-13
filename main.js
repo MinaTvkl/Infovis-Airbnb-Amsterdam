@@ -1,64 +1,59 @@
 var dataset;
 
 d3.csv("bar_chart_migration_saldo.csv").then(function(data) {
-  dataset = data.map(function(val) {
-    return {
-      Year: val.Year,
-      Value: val.Amsterdam
-    };
-  })
+  dataset = removeFirst(Object.values(data[1])).map(function(value) {
+    return parseInt(value);
+  });
   gen_vis();
 });
 
-var idiomWidth;
-var idiomHeight;
+function removeFirst(array) {
+  return array.splice(1,array.length);
+}
+
+var idiomWidth = 500;
+var idiomHeight = 400;
+
+var padding = {top : 20, right: 20, bottom: 20, left: 40}
+
+var graphWidth = idiomWidth - padding.left - padding.right;
+var graphHeight = idiomHeight - padding.top - padding.bottom;
 
 //Used https://bl.ocks.org/gurjeet/83189e2931d053187eab52887a870c5e as example
 function gen_vis() {
-  var barWidth = 30;
-  idiomHeight = 500;
-  var margin = 0;
-  idiomWidth = margin + barWidth * dataset.length;
+  var barWidth = Math.abs(graphWidth / dataset.length) ;
+  var maxBarPositiveHeightPercentage = d3.max(dataset) / (d3.max(dataset) + Math.abs(d3.min(dataset)));
+  console.log(maxBarPositiveHeightPercentage);
+  var maxBarPositiveHeight = graphHeight * maxBarPositiveHeightPercentage;
+  var maxBarNegativeHeight = graphHeight * (1 - maxBarPositiveHeightPercentage);
 
-  var valuesOnly = dataset.map(function(val) {
-    console.log(val.Value);
-    return val.Value;
-  });
+  var positiveYAxisScale = d3.scaleLinear()
+    .domain([0, d3.max(dataset)])
+    .range([0, maxBarPositiveHeight]);
 
-  var yScale = d3.scaleLinear()
-    .domain([0, d3.max(valuesOnly)])
-    .range([0, idiomHeight]);
+  var wholeYAxisScale = d3.scaleLinear()
+    .domain([d3.min(dataset), d3.max(dataset)])
+    .range([graphHeight, 0]);
 
-  var yAxisScale = d3.scaleLinear()
-    .domain([d3.min(valuesOnly), d3.max(valuesOnly)])
-    .range([idiomHeight - yScale(d3.min(dataset)), 0]);
+  var yAxis = d3.axisLeft(wholeYAxisScale);
 
-  var svg = d3.select("#chart");
-
-  //Idiomheight is idiomHeight + 100 in example
-  svg.attr("height", idiomHeight).attr("width", idiomWidth);
+  var svg = d3.select("#chart")
+    .append("svg")
+    .attr("height", idiomHeight)
+    .attr("width", idiomWidth)
+    .style("border", "1px solid");
 
   svg.selectAll("rect")
-    .data(valuesOnly)
-    .enter()
-    .append("rect")
-    //Set bar's x position to next to one another
-    .attr("x", function(value, index) {
-      return margin + index * barWidth;
-    })
-    //Set bar's y position to the x-axis
-    .attr("y", function(value) {
-      return idiomHeight - Math.max(0, yScale(value));
-    })
-    //Scale height of bar to value relative to max value on the y axis
-    .attr("height", function(value) {
-      return yScale(value);
-    })
+  .data(dataset)
+  .enter()
+  .append("rect")
+    .attr("x", function(value, index) {return padding.left + index*barWidth;})
+    .attr("y", function(value) {return padding.top + maxBarPositiveHeight - Math.max(0, positiveYAxisScale(value));})
+    .attr("height", function(value) {return Math.abs(positiveYAxisScale(value));})
     .attr("width", barWidth)
     .style("fill", "green");
 
-  var yAxis = d3.axisLeft(yAxisScale);
-
-  svg.append("group")
-    .call(yAxis);
+  svg.append("g").attr("transform", function(d) {
+    return "translate(" + padding.left + ", " + padding.top + ")";
+  }).call(yAxis);
 }
