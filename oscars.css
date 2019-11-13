@@ -1,23 +1,20 @@
-:root { --var-color-grey: #898989; }
-body { 
-	margin:0; 
-	position:fixed; 
-	top:0; 
-	right:0; 
-	bottom:0; 
-	left:0; 
-	font-family: Helvetica; ; 
-	}
+.line {
+    fill: none;
+    stroke: #ffab00;
+    stroke-width: 3;
+}
+  
+.overlay {
+  fill: none;
+  pointer-events: all;
+}
 
-text {
-	font-family: Helvetica;
-	color: var(--var-color-grey);
+/* Style the dots by assigning a fill and stroke */
+.dot {
+    fill: #ffab00;
+    stroke: #fff;
 }
-.axis path,
-.axis line {
-	fill: none;
-	stroke: var(--var-color-grey);
-	shape-rendering: crispEdges;
+  .focus circle {
+  fill: none;
+  stroke: steelblue;
 }
-.x.axis {font-size: 15px;  }
-.y.axis {font-size: 12px; }

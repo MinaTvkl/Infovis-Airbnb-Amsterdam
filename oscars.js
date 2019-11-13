@@ -1,123 +1,74 @@
-var margin = { top: 40, right: 30, bottom: 30, left: 50 },
-    width = 460 - margin.left - margin.right,
-    height = 320 - margin.top - margin.bottom;
+var dataset;
 
-var greyColor = "#898989";
-var barColor = d3.interpolateInferno(0.4);
-var highlightColor = d3.interpolateInferno(0.3);
-
-var formatPercent = d3.format(".0%");
-
-var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-var x = d3.scaleBand()
-    .range([0, width])
-    .padding(0.4);
-var y = d3.scaleLinear()
-    .range([height, 0]);
-
-var xAxis = d3.axisBottom(x).tickSize([]).tickPadding(10);
-var yAxis = d3.axisLeft(y).tickFormat(formatPercent);
-
-var data;
-d3.csv("bar_chart_migration_saldo.csv", function (d) {
-    return {
-        Year: new Date(+d.Year, 0, 1), // convert "Year" column to Date
-        Migration: +d.Amsterdam // convert "Length" column to number
-
-    };
-}, function (error, rows) {
-    console.log(rows);
-});
-/*.then((data) => {
-        return data.map((d) => {
-            console.log(d.Amsterdam)
-            d.Amsterdam = +d.Amsterdam;
-            console.log(d.Amsterdam)
-
-            return d;
-        });})*/
-/*
-.then(function (data) { //reading in the data hoping it works
-    dataset = data; // this variable is always the full dataset
-    console.log(dataset)
-
-    gen_vis();});*/
-
-d3.csv("bar_chart_migration_saldo.csv")
-    .then((data) => {
-        return data.map((d) => {
-            d.Year = +d.Year;
-            d.Amsterdam = d.Amsterdam;
-            console.log(d)
-            console.log(d.Amsterdam)
-            //gen_vis(); //where to put?
-            return d;
-            
-            
-        })
-
-    })
-    .catch((error) => {
-        throw error;
+d3.csv("line_chart_neighbourhood_avg_prices.csv").then(function(data) {
+    dataset = removeFirst(Object.values(data[1])).map(function(value) {
+      return parseInt(value);
     });
+    gen_vis();
+  });
 
+function removeFirst(array) {
+    return array.splice(1, array.length);
+}
 
 function gen_vis() {
-    x.domain(data.map(d => { return d.Year; }));
-    // y.domain([0, d3.max(data,  d => { return d.Amsterdam; })]);
-    y.domain([0, d3.max(data, function (d) { return d.Amsterdam; })]); //onclick change
+    // 2. Use the margin convention practice 
+    var margin = { top: 50, right: 50, bottom: 50, left: 50 }
+        , width = window.innerWidth - margin.left - margin.right // Use the window's width 
+        , height = window.innerHeight - margin.top - margin.bottom; // Use the window's height
 
+    // The number of datapoints
+    var n = 21;
+
+    // 5. X scale will use the index of our data
+    var xScale = d3.scaleLinear()
+        .domain([0, n - 1]) // input
+        .range([0, width]); // output
+
+    // 6. Y scale will use the randomly generate number 
+    var yScale = d3.scaleLinear()
+        .domain([0, 1]) // input 
+        .range([height, 0]); // output 
+
+    // 7. d3's line generator
+    var line = d3.line()
+        .x(function (d, i) { return xScale(i); }) // set the x values for the line generator
+        .y(function (d) { return yScale(d.y); }) // set the y values for the line generator 
+        .curve(d3.curveMonotoneX) // apply smoothing to the line
+
+    // 8. An array of objects of length N. Each object has key -> value pair, the key being "y" and the value is a random number
+    var dataset = d3.range(n).map(function (d) { return { "y": d3.randomUniform(1)() } })
+
+    // 1. Add the SVG to the page and employ #2
+    var svg = d3.select("#line").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // 3. Call the x axis in a group tag
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
+        .call(d3.axisBottom(xScale)); // Create an axis component with d3.axisBottom
+
+    // 4. Call the y axis in a group tag
     svg.append("g")
         .attr("class", "y axis")
-        .call(yAxis);
+        .call(d3.axisLeft(yScale)); // Create an axis component with d3.axisLeft
 
-    svg.selectAll(".bar")
-        .data(data)
-        .enter().append("rect")
-        .attr("class", "bar")
-        .style("display", d => { return d.Amsterdam === null ? "none" : null; })
-        .style("fill", d => {
-            return d.Amsterdam === d3.max(data, d => { return d.Amsterdam; })
-                ? highlightColor : barColor
-        })
-        .attr("x", d => { return x(d.Year); })
-        .attr("width", x.bandwidth())
-        .attr("y", d => { return height; })
-        .attr("height", 0)
-        .transition()
-        .duration(750)
-        .delay(function (d, i) {
-            return i * 150;
-        })
-        .attr("y", d => { return y(d.Amsterdam); })
-        .attr("height", d => { return height - y(d.Amsterdam); });
+    // 9. Append the path, bind the data, and call the line generator 
+    svg.append("path")
+        .datum(dataset) // 10. Binds data to the line 
+        .attr("class", "line") // Assign a class for styling 
+        .attr("d", line); // 11. Calls the line generator 
 
-    svg.selectAll(".label")
-        .data(data)
-        .enter()
-        .append("text")
-        .attr("class", "label")
-        .style("display", d => { return d.Amsterdam === null ? "none" : null; })
-        .attr("x", (d => { return x(d.Year) + (x.bandwidth() / 2) - 8; }))
-        .style("fill", d => {
-            return d.Amsterdam === d3.max(data, d => { return d.Amsterdam; })
-                ? highlightColor : greyColor
-        })
-        .attr("y", d => { return height; })
-        .attr("height", 0)
-        .transition()
-        .duration(750)
-        .delay((d, i) => { return i * 150; })
-        .text(d => { return formatPercent(d.Amsterdam); })
-        .attr("y", d => { return y(d.Amsterdam) + .1; })
-        .attr("dy", "-.7em");
+    // 12. Appends a circle for each datapoint 
+    svg.selectAll(".dot")
+        .data(dataset)
+        .enter().append("circle") // Uses the enter().append() method
+        .attr("class", "dot") // Assign a class for styling
+        .attr("cx", function (d, i) { return xScale(i) })
+        .attr("cy", function (d) { return yScale(d.y) })
+        .attr("r", 5)
 }
