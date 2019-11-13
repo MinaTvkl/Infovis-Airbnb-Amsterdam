@@ -23,16 +23,16 @@ var y = d3.scaleLinear()
 var xAxis = d3.axisBottom(x).tickSize([]).tickPadding(10);
 var yAxis = d3.axisLeft(y).tickFormat(formatPercent);
 
-var dataset;
-d3.csv("bar_chart_migration_saldo.csv", function(d) {
+var data;
+d3.csv("bar_chart_migration_saldo.csv", function (d) {
     return {
-      Year: new Date(+d.Year, 0, 1), // convert "Year" column to Date
-      Migration: +d.Amsterdam // convert "Length" column to number
-      
+        Year: new Date(+d.Year, 0, 1), // convert "Year" column to Date
+        Migration: +d.Amsterdam // convert "Length" column to number
+
     };
-  }, function(error, rows) {
+}, function (error, rows) {
     console.log(rows);
-  });
+});
 /*.then((data) => {
         return data.map((d) => {
             console.log(d.Amsterdam)
@@ -41,17 +41,36 @@ d3.csv("bar_chart_migration_saldo.csv", function(d) {
 
             return d;
         });})*/
-    /*
-    .then(function (data) { //reading in the data hoping it works
-        dataset = data; // this variable is always the full dataset
-        console.log(dataset)
+/*
+.then(function (data) { //reading in the data hoping it works
+    dataset = data; // this variable is always the full dataset
+    console.log(dataset)
 
-        gen_vis();});*/
-    
+    gen_vis();});*/
+
+d3.csv("bar_chart_migration_saldo.csv")
+    .then((data) => {
+        return data.map((d) => {
+            d.Year = +d.Year;
+            d.Amsterdam = d.Amsterdam;
+            console.log(d)
+            console.log(d.Amsterdam)
+            //gen_vis(); //where to put?
+            return d;
+            
+            
+        })
+
+    })
+    .catch((error) => {
+        throw error;
+    });
+
+
 function gen_vis() {
-    x.domain(dataset.map(d => { return d.Year; }));
-    // y.domain([0, d3.max(dataset,  d => { return d.Amsterdam; })]);
-    y.domain([0, d3.max(dataset, function (d) { return d.Amsterdam; })]); //onclick change
+    x.domain(data.map(d => { return d.Year; }));
+    // y.domain([0, d3.max(data,  d => { return d.Amsterdam; })]);
+    y.domain([0, d3.max(data, function (d) { return d.Amsterdam; })]); //onclick change
 
     svg.append("g")
         .attr("class", "x axis")
@@ -62,12 +81,12 @@ function gen_vis() {
         .call(yAxis);
 
     svg.selectAll(".bar")
-        .data(dataset)
+        .data(data)
         .enter().append("rect")
         .attr("class", "bar")
         .style("display", d => { return d.Amsterdam === null ? "none" : null; })
         .style("fill", d => {
-            return d.Amsterdam === d3.max(dataset, d => { return d.Amsterdam; })
+            return d.Amsterdam === d3.max(data, d => { return d.Amsterdam; })
                 ? highlightColor : barColor
         })
         .attr("x", d => { return x(d.Year); })
@@ -83,14 +102,14 @@ function gen_vis() {
         .attr("height", d => { return height - y(d.Amsterdam); });
 
     svg.selectAll(".label")
-        .data(dataset)
+        .data(data)
         .enter()
         .append("text")
         .attr("class", "label")
         .style("display", d => { return d.Amsterdam === null ? "none" : null; })
         .attr("x", (d => { return x(d.Year) + (x.bandwidth() / 2) - 8; }))
         .style("fill", d => {
-            return d.Amsterdam === d3.max(dataset, d => { return d.Amsterdam; })
+            return d.Amsterdam === d3.max(data, d => { return d.Amsterdam; })
                 ? highlightColor : greyColor
         })
         .attr("y", d => { return height; })
