@@ -2,7 +2,8 @@ var dataset;
 
 d3.csv("line_chart_neighbourhood_avg_prices.csv").then(function(data) {
     dataset = removeFirst(Object.values(data[1])).map(function(value) {
-      return parseInt(value);
+        console.log(value)
+        return parseInt(value);
     });
     gen_vis();
   });
