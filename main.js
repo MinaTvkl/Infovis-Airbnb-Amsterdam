@@ -1,8 +1,23 @@
-var dataset, districtNames;
+var datasetValues, districtNames, max, min;
+var datasetYears = [2014, 2015, 2016, 2017, 2018];
 
-d3.csv("bar_chart_migration_saldo.csv").then(function(data) {
-  districtNames = removeFirst(Object.keys(data[0]));
-  dataset = removeFirst(Object.values(data[1])).map(value => parseInt(value));
+d3.json("/data/bar_chart/migration.json").then(function(data) {
+  dataset = data;
+  districtNames = Object.keys(data.year2014);
+  datasetValues = {
+    2014: Object.values(data.year2014),
+    2015: Object.values(data.year2015),
+    2016: Object.values(data.year2016),
+    2017: Object.values(data.year2017),
+    2018: Object.values(data.year2018)
+  }
+  max = Math.max.apply(Math, Object.values(datasetValues).map(function(row) {
+    return Math.max.apply(Math, row);
+  }));
+  min = Math.min.apply(Math, Object.values(datasetValues).map(function(row) {
+    return Math.min.apply(Math, row);
+  }));
+
   gen_vis();
 });
 
@@ -13,68 +28,73 @@ function removeFirst(array) {
 var idiomWidth = 500;
 var idiomHeight = 300;
 
-var padding = {
-  top: 20,
-  right: 20,
-  bottom: 60,
+var axesSpace = {
+  top: 0,
+  right: 0,
+  bottom: 50,
   left: 40
 }
 
-var graphWidth = idiomWidth - padding.left - padding.right;
-var graphHeight = idiomHeight - padding.top - padding.bottom;
+var barPadding = {
+  sides: 2
+}
+
+var graphWidth = idiomWidth;
+var graphHeight = idiomHeight;
+
+var chartWidth = graphWidth - axesSpace.left - axesSpace.right;
+var chartHeight = graphHeight - axesSpace.top - axesSpace.bottom;
 
 //Used https://bl.ocks.org/gurjeet/83189e2931d053187eab52887a870c5e as example
 function gen_vis() {
-  var barWidth = Math.abs(graphWidth / dataset.length);
-  var maxBarPositiveHeightPercentage = d3.max(dataset) / (d3.max(dataset) + Math.abs(d3.min(dataset)));
+  var barWidth = Math.abs(chartWidth / datasetValues[2014].length);
+  var posPercentage = max / (max + Math.abs(min));
 
-  var maxBarPositiveHeight = graphHeight * maxBarPositiveHeightPercentage;
-  var maxBarNegativeHeight = graphHeight * (1 - maxBarPositiveHeightPercentage);
+  var posHeight = posPercentage * chartHeight;
+  var negHeight = (1 - posPercentage) * chartHeight;
 
-  var positiveYAxisScale = d3.scaleLinear()
-    .domain([0, d3.max(dataset)])
-    .range([0, maxBarPositiveHeight]);
+  var posYScale = d3.scaleLinear().domain([0, max]).range([0, posHeight]);
+  var yScale = d3.scaleLinear().domain([min, max]).range([chartHeight, 0]);
+  var xScale = d3.scaleBand().domain(districtNames).range([0, chartWidth]);
 
-  var wholeYAxisScale = d3.scaleLinear()
-    .domain([d3.min(dataset), d3.max(dataset)])
-    .range([graphHeight, 0]);
-
-  var wholeXAxisScale = d3.scaleBand().domain(districtNames).range([0,graphWidth]);
-
-  var yAxis = d3.axisLeft(wholeYAxisScale);
-
-  var xAxis = d3.axisBottom(wholeXAxisScale).tickSize(0);
+  var yAxis = d3.axisLeft(yScale);
+  var xAxis = d3.axisBottom(xScale).tickSize(0);
 
   var svg = d3.select("#chart")
     .append("svg")
-    .attr("height", idiomHeight)
-    .attr("width", idiomWidth)
+    .attr("height", graphHeight)
+    .attr("width", graphWidth)
     .style("border", "1px solid");
 
   svg.selectAll("rect")
-    .data(dataset)
+    .data(datasetValues[2018])
     .enter()
     .append("rect")
     .attr("x", function(value, index) {
-      return padding.left + index * barWidth;
+      return axesSpace.left + index * barWidth;
     })
     .attr("y", function(value) {
-      return padding.top + maxBarPositiveHeight - Math.max(0, positiveYAxisScale(value));
+      return posHeight - Math.max(0, posYScale(value));
     })
     .attr("height", function(value) {
-      return Math.abs(positiveYAxisScale(value));
+      return Math.abs(posYScale(value));
     })
     .attr("width", barWidth)
     .style("fill", "green");
 
   svg.append("g").attr("transform", function(d) {
-    return "translate(" + padding.left + ", " + padding.top + ")";
+    return "translate(" + (axesSpace.left) + ", " + (axesSpace.top) + ")";
   }).call(yAxis);
 
-  svg.append("g")
-    .attr('class','axis')
-    .call(xAxis)
-    .attr("transform", "translate(" + padding.left +  "," + (maxBarPositiveHeight + padding.top) + ")")
-    .selectAll("text").attr("transform", "translate(-20, " + (maxBarNegativeHeight + 20 )+ ") rotate(-45)");
+  svg.append("g").attr("class", "axis").call(xAxis)
+    .attr("transform", "translate(" + axesSpace.left + "," + (posHeight + axesSpace.top) + ")")
+    .selectAll("text").attr("transform", "translate(" + 0 + ", " + (negHeight + 20) + ") rotate(-45)");
 
+  //
+  // svg.append("g")
+  //   .attr('class','axis')
+  //   .call(xAxis)
+  //   .attr("transform", "translate(" + padding.left +  "," + (maxBarPositiveHeight + padding.top) + ")")
+  //   .selectAll("text").attr("transform", "translate(-20, " + (maxBarNegativeHeight + 20 )+ ") rotate(-45)");
+  //
 }
