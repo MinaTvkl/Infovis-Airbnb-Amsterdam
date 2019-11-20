@@ -21,3 +21,12 @@ text {
 }
 .x.axis {font-size: 15px;  }
 .y.axis {font-size: 12px; }
+
+#chart-container{
+	display: inline-block;
+}
+
+#selectors{
+	display: inline;
+	margin:50;
+}

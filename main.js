@@ -60,7 +60,7 @@ function gen_vis() {
   var yAxis = d3.axisLeft(yScale);
   var xAxis = d3.axisBottom(xScale).tickSize(0);
 
-  var svg = d3.select("#chart")
+  var svg = d3.select("#bar-chart")
     .append("svg")
     .attr("height", graphHeight)
     .attr("width", graphWidth)
