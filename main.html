@@ -1,0 +1,40 @@
+<!--
+	To run page locally:
+	http-server . -p 8000
+	http://localhost:8000/oscar.html
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Bar chart</title>
+  <link rel="stylesheet" href="main.css">
+  <link rel="stylesheet" href="linechart.css">
+  <script src="https://d3js.org/d3.v5.min.js" charset="utf-8"></script>
+</head>
+
+<body>
+  <div id="chart-container">
+    <div id="map"></div>
+    <div id="bar-chart"></div>
+    <div id="line-chart"></div>
+    <div id="radio-chart"></div>
+  </div>
+  <div id="selectors">
+    <select name="districts">
+      <option value="Amsterdam">Amsterdam</option>
+      <option value="Centrum">Centrum</option>
+      <option value="Westpoort">Westpoort</option>
+      <option value="West">West</option>
+      <option value="Niew-West">Niew-West</option>
+      <option value="Zuid">Zuid</option>
+      <option value="Oost">Oost</option>
+      <option value="Noord">Noord</option>
+      <option value="Zuidoost">Zuidoost</option>
+    </select>
+  </div>
+  <script src="main.js"></script>
+  <!--connects to the javascript file, bundle created by npm install and then npm build-->
+  <script src="linechart.js"></script>
+</body>
+</html>

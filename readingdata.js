@@ -14,4 +14,3 @@ d3.csv("bar_chart_migration_saldo.csv")
     .catch((error) => {
     		throw error;
     });
-//works
