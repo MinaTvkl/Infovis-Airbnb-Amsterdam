@@ -17,6 +17,7 @@ d3.json("/data/bar_chart/migration.json").then(function(data) {
   min = Math.min.apply(Math, Object.values(datasetValues).map(function(row) {
     return Math.min.apply(Math, row);
   }));
+  dataset = datasetValues[2018];
 
   gen_vis();
 });
@@ -47,7 +48,7 @@ var chartHeight = graphHeight - axesSpace.top - axesSpace.bottom;
 
 //Used https://bl.ocks.org/gurjeet/83189e2931d053187eab52887a870c5e as example
 function gen_vis() {
-  var barWidth = Math.abs(chartWidth / datasetValues[2014].length);
+  var barWidth = Math.abs(chartWidth / dataset.length);
   var posPercentage = max / (max + Math.abs(min));
 
   var posHeight = posPercentage * chartHeight;
@@ -67,7 +68,7 @@ function gen_vis() {
     .style("border", "1px solid");
 
   svg.selectAll("rect")
-    .data(datasetValues[2018])
+    .data(dataset)
     .enter()
     .append("rect")
     .attr("x", function(value, index) {
@@ -90,11 +91,26 @@ function gen_vis() {
     .attr("transform", "translate(" + axesSpace.left + "," + (posHeight + axesSpace.top) + ")")
     .selectAll("text").attr("transform", "translate(" + 0 + ", " + (negHeight + 20) + ") rotate(-45)");
 
-  //
-  // svg.append("g")
-  //   .attr('class','axis')
-  //   .call(xAxis)
-  //   .attr("transform", "translate(" + padding.left +  "," + (maxBarPositiveHeight + padding.top) + ")")
-  //   .selectAll("text").attr("transform", "translate(-20, " + (maxBarNegativeHeight + 20 )+ ") rotate(-45)");
-  //
+  d3.select("#year-slider").on("input", function() {
+    var year = document.getElementById("year-slider").value;
+    console.log(typeof year);
+    dataset = datasetValues[year];
+
+    svg.selectAll("rect")
+      .data(dataset)
+      .transition() // add a smooth transition
+      .duration(1000)
+      .attr("x", function(value, index) {
+        return axesSpace.left + index * barWidth;
+      })
+      .attr("y", function(value) {
+        return posHeight - Math.max(0, posYScale(value));
+      })
+      .attr("height", function(value) {
+        return Math.abs(posYScale(value));
+      })
+      .attr("width", barWidth)
+      .style("fill", "green");
+  });
+
 }

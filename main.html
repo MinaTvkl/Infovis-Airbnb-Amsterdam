@@ -5,14 +5,20 @@
 -->
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Bar chart</title>
-    <link rel="stylesheet" href="main.css">
-    <script src="https://d3js.org/d3.v5.min.js" charset="utf-8"></script>
-  </head>
-  <body>
-    <div id="chart"></div>
 
-    <script src="main.js"></script> <!--connects to the javascript file, bundle created by npm install and then npm build-->
-  </body>
+<head>
+  <title>Bar chart</title>
+  <link rel="stylesheet" href="main.css">
+  <script src="https://d3js.org/d3.v5.min.js" charset="utf-8"></script>
+</head>
+
+<body>
+  <div id="chart"></div>
+  <div class="slidecontainer" width="300px">
+    <input width="300px" type="range" min="2014" max="2018" value="2018" class="slider" id="year-slider">
+  </div>
+  <script src="main.js"></script>
+  <!--connects to the javascript file, bundle created by npm install and then npm build-->
+</body>
+
 </html>
