@@ -1,11 +1,11 @@
-var datasetValues, districtNames, max, min;
+var districtNames;
 
 var idiomWidth = 500;
 var idiomHeight = 300;
 
 d3.json("/data/bar_chart/migration.json").then(function(data) {
   districtNames = Object.keys(data.year2014);
-  datasetValues = {
+  var datasetValues = {
     2014: Object.values(data.year2014),
     2015: Object.values(data.year2015),
     2016: Object.values(data.year2016),
@@ -13,12 +13,14 @@ d3.json("/data/bar_chart/migration.json").then(function(data) {
     2018: Object.values(data.year2018)
   }
 
-  gen_vis_bar_chart();
+  gen_vis_bar_chart(datasetValues);
 });
 
 //Used https://bl.ocks.org/gurjeet/83189e2931d053187eab52887a870c5e as example
-function gen_vis_bar_chart() {
+function gen_vis_bar_chart(datasetValues) {
   var datasetYears = [2014, 2015, 2016, 2017, 2018];
+
+  var dataset = datasetValues[2018];
 
   var axesSpace = {
     top: 0,
@@ -60,7 +62,7 @@ function gen_vis_bar_chart() {
     .style("border", "1px solid");
 
   svg.selectAll("rect")
-    .data(datasetValues[2018])
+    .data(dataset)
     .enter()
     .append("rect")
     .attr("x", function(value, index) {
@@ -82,4 +84,26 @@ function gen_vis_bar_chart() {
   svg.append("g").attr("class", "axis").call(xAxis)
     .attr("transform", "translate(" + axesSpace.left + "," + (posHeight + axesSpace.top) + ")")
     .selectAll("text").attr("transform", "translate(" + 0 + ", " + (negHeight + 20) + ") rotate(-45)");
+
+  d3.select("#year-slider").on("input", function() {
+    var year = document.getElementById("year-slider").value;
+    dataset = datasetValues[year];
+
+    svg.selectAll("rect")
+      .data(dataset)
+      .transition() // add a smooth transition
+      .duration(1000)
+      .attr("x", function(value, index) {
+        return axesSpace.left + index * barWidth;
+      })
+      .attr("y", function(value) {
+        return posHeight - Math.max(0, posYScale(value));
+      })
+      .attr("height", function(value) {
+        return Math.abs(posYScale(value));
+      })
+      .attr("width", barWidth)
+      .style("fill", "green");
+  });
+
 }
