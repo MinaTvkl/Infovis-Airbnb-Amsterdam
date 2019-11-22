@@ -1,8 +1,9 @@
 var datasetValues, districtNames, max, min;
-var datasetYears = [2014, 2015, 2016, 2017, 2018];
+
+var idiomWidth = 500;
+var idiomHeight = 300;
 
 d3.json("/data/bar_chart/migration.json").then(function(data) {
-  dataset = data;
   districtNames = Object.keys(data.year2014);
   datasetValues = {
     2014: Object.values(data.year2014),
@@ -11,42 +12,34 @@ d3.json("/data/bar_chart/migration.json").then(function(data) {
     2017: Object.values(data.year2017),
     2018: Object.values(data.year2018)
   }
-  max = Math.max.apply(Math, Object.values(datasetValues).map(function(row) {
+
+  gen_vis_bar_chart();
+});
+
+//Used https://bl.ocks.org/gurjeet/83189e2931d053187eab52887a870c5e as example
+function gen_vis_bar_chart() {
+  var datasetYears = [2014, 2015, 2016, 2017, 2018];
+
+  var axesSpace = {
+    top: 0,
+    right: 0,
+    bottom: 50,
+    left: 40
+  }
+
+  var graphWidth = idiomWidth;
+  var graphHeight = idiomHeight;
+
+  var chartWidth = graphWidth - axesSpace.left - axesSpace.right;
+  var chartHeight = graphHeight - axesSpace.top - axesSpace.bottom;
+
+  var max = Math.max.apply(Math, Object.values(datasetValues).map(function(row) {
     return Math.max.apply(Math, row);
   }));
-  min = Math.min.apply(Math, Object.values(datasetValues).map(function(row) {
+  var min = Math.min.apply(Math, Object.values(datasetValues).map(function(row) {
     return Math.min.apply(Math, row);
   }));
 
-  gen_vis();
-});
-
-function removeFirst(array) {
-  return array.splice(1, array.length);
-}
-
-var idiomWidth = 500;
-var idiomHeight = 300;
-
-var axesSpace = {
-  top: 0,
-  right: 0,
-  bottom: 50,
-  left: 40
-}
-
-var barPadding = {
-  sides: 2
-}
-
-var graphWidth = idiomWidth;
-var graphHeight = idiomHeight;
-
-var chartWidth = graphWidth - axesSpace.left - axesSpace.right;
-var chartHeight = graphHeight - axesSpace.top - axesSpace.bottom;
-
-//Used https://bl.ocks.org/gurjeet/83189e2931d053187eab52887a870c5e as example
-function gen_vis() {
   var barWidth = Math.abs(chartWidth / datasetValues[2014].length);
   var posPercentage = max / (max + Math.abs(min));
 
@@ -89,12 +82,4 @@ function gen_vis() {
   svg.append("g").attr("class", "axis").call(xAxis)
     .attr("transform", "translate(" + axesSpace.left + "," + (posHeight + axesSpace.top) + ")")
     .selectAll("text").attr("transform", "translate(" + 0 + ", " + (negHeight + 20) + ") rotate(-45)");
-
-  //
-  // svg.append("g")
-  //   .attr('class','axis')
-  //   .call(xAxis)
-  //   .attr("transform", "translate(" + padding.left +  "," + (maxBarPositiveHeight + padding.top) + ")")
-  //   .selectAll("text").attr("transform", "translate(-20, " + (maxBarNegativeHeight + 20 )+ ") rotate(-45)");
-  //
 }
