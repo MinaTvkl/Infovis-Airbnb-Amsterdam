@@ -18,8 +18,8 @@ var axesSpace = {
 }
 
 var radarSpace = {
-  sides: 60,
-  topBottom: 60
+  sides: 50,
+  topBottom: 50
 }
 
 var chartWidth = idiomWidth - axesSpace.left - axesSpace.right;
@@ -53,10 +53,10 @@ function gen_vis() {
   var radarchart_max = 6;
   var radarchart_min = 0;
 
-  let radarchart_dataNames = ["A", "B", "C", "D", "E", "F"];
+  let radarchart_dataNames = ["Safety", "Hate", "C", "D", "E", "F"];
   let radarchart_dataset = [1, 2, 3, 4, 5, 6];
-  let radarchart_radius = Math.min(idiomWidth - radarSpace.sides, idiomHeight - radarSpace.topBottom);
-  let radarchart_center = radarchart_radius / 2;
+  let radarchart_diameter = Math.min(idiomWidth - 2*radarSpace.sides, idiomHeight - 2*radarSpace.topBottom);
+  let radarchart_radius = radarchart_diameter / 2;
 
   var radarchart_axis = radarchart_datasetValues[1];
 
@@ -68,22 +68,15 @@ function gen_vis() {
   var radarchart_ticksAmount = 3;
   var radarchart_circleAmount = 6;
 
-  let radarchart_rScale = d3.scaleLinear().domain([radarchart_min, radarchart_max]).range([0, radarchart_radius / 2]);
+  let radarchart_rScale = d3.scaleLinear().domain([radarchart_min, radarchart_max]).range([0, radarchart_radius]);
   var radarchart_ticks = [];
   for (var i = 0; i <= radarchart_circleAmount; i++) {
     radarchart_ticks.push(i * (radarchart_max - radarchart_min) / radarchart_circleAmount);
   }
 
   function angleToCoordinate(angle, value) {
-    console.log("Angle is " + angle);
     let x = Math.sin(angle) * radarchart_rScale(value);
     let y = Math.cos(angle) * radarchart_rScale(value);
-    console.log("Cosine is " + Math.cos(angle));
-    console.log("Value is " + value);
-    console.log("Length of the line is " + radarchart_rScale(value));
-    console.log("Radius of circle is " + radarchart_radius);
-    console.log("X IS " + x);
-    console.log("Y IS " + y);
 
     return {
       "x": x,
@@ -100,10 +93,10 @@ function gen_vis() {
     .attr("r", radarchart_rScale(t))
   );
 
-  var radarchart_yScale = d3.scaleLinear().domain([radarchart_min, radarchart_max]).range([radarchart_radius / 2, 0]);
+  var radarchart_yScale = d3.scaleLinear().domain([radarchart_min, radarchart_max]).range([radarchart_radius, 0]);
 
   radarchart_svg.append("g").call(d3.axisLeft(radarchart_yScale).ticks(radarchart_ticksAmount))
-    .attr("transform", "translate(" + idiomWidth / 2 + "," + radarSpace.topBottom / 2 + ")")
+    .attr("transform", "translate(" + idiomWidth / 2 + "," + radarSpace.topBottom + ")")
     .selectAll("text").attr("transform", "translate(" + 0 + ", " + (-5) + ")");
 
   for (var i = 0; i < radarchart_dataNames.length; i++) {
@@ -113,12 +106,10 @@ function gen_vis() {
       angle = 0;
     } else angle = (Math.PI / radarchart_dataNames.length * i * 2);
     let line_coordinate = angleToCoordinate(angle, radarchart_max);
-    let label_coordinate = angleToCoordinate(angle, radarchart_max + 0.5);
+    let label_coordinate = angleToCoordinate(angle, radarchart_max + 1);
 
     //draw axis line
-    if (i == 0) {
-
-    } else {
+    if (i != 0) {
       radarchart_svg.append("line")
         .attr("x1", idiomWidth / 2)
         .attr("y1", idiomHeight / 2)
@@ -128,12 +119,43 @@ function gen_vis() {
     }
 
     //draw axis label
-    radarchart_svg.append("text")
+    radarchart_svg.append("g").attr("class", "tick").append("text").style("text-anchor", "middle").attr("dy", "0.3em")
       .attr("x", idiomWidth / 2 + label_coordinate.x)
       .attr("y", idiomHeight / 2 + label_coordinate.y)
       .text(cur);
   }
 
+  let radarchart_line = d3.line()
+    .x(d => d.x)
+    .y(d => d.y);
+
+  function getPathCoordinates() {
+    let coordinates = [];
+    for (var i = 0; i < radarchart_dataNames.length; i++) {
+      let ft_name = radarchart_dataset[i];
+      if (i == 0) {
+        angle = 0;
+      } else angle = (Math.PI / radarchart_dataNames.length * i * 2);
+      coordinates.push(angleToCoordinate(angle, radarchart_dataset[i]));
+    }
+    coordinates.push(angleToCoordinate(0, radarchart_dataset[0]));
+    return coordinates;
+  }
+
+  for (var i = 0; i < radarchart_dataset.length; i++) {
+    let coordinates = getPathCoordinates();
+
+    //draw the path element
+    radarchart_svg.append("path")
+      .datum(coordinates)
+      .attr("d", radarchart_line)
+      .attr("transform", "translate(" + idiomWidth/2 + "," + idiomHeight/2 + ")")
+      .attr("stroke-width", 3)
+      .attr("stroke", "#ffab00")
+      .attr("stroke-opacity", 1)
+      .attr("fill", "none")
+      .attr("opacity", 0.5);
+  }
 
   //Barchart
   var barchart_datasetYears = [2014, 2015, 2016, 2017, 2018];
