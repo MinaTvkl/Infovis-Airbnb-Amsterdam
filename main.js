@@ -119,9 +119,8 @@ function gen_vis() {
     }
 
     //draw axis label
-    radarchart_svg.append("g").attr("class", "tick").append("text").style("text-anchor", "middle").attr("dy", "0.3em")
-      .attr("x", idiomWidth / 2 + label_coordinate.x)
-      .attr("y", idiomHeight / 2 + label_coordinate.y)
+    radarchart_svg.append("g").attr("class", "tick").append("text").style("text-anchor", "middle").style("font-size","12px").style("color", "#898989")
+      .attr("dy", "0.3em").attr("x", idiomWidth / 2 + label_coordinate.x).attr("y", idiomHeight / 2 + label_coordinate.y)
       .text(cur);
   }
 

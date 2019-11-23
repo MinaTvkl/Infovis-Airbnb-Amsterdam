@@ -14,7 +14,6 @@ body {
 
 text {
   font-family: Helvetica;
-  color: var(--var-color-grey);
 }
 
 .axis path,
