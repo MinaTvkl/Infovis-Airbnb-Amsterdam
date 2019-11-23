@@ -28,6 +28,11 @@ var chartHeight = idiomHeight - axesSpace.top - axesSpace.bottom;
 Promise.all([
   d3.json("/data/bar_chart/migration.json"),
   d3.json("/data/line_chart/avg_prices_district.json"),
+  d3.json("/data/radar_chart/criminality.json"),
+  d3.json("/data/radar_chart/nuisance.json"),
+  d3.json("/data/radar_chart/persons_avoidance.json"),
+  d3.json("/data/radar_chart/persons_inconvenience.json"),
+  d3.json("/data/radar_chart/safety.json")
 ]).then(function(data) {
   //Reading in barchart data
   barchart_datasetValues = {
