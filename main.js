@@ -10,7 +10,7 @@ var idiomHeight = 300;
 var transitionSpeed = 400;
 
 var axesSpace = {
-  top: 0,
+  top: 20,
   right: 20,
   bottom: 50,
   left: 40
@@ -69,7 +69,7 @@ function gen_vis() {
     .attr("x", function(value, index) {
       return axesSpace.left + index * barchart_barWidth;
     }).attr("y", function(value) {
-      return barchart_posHeight - Math.max(0, barchart_posYScale(value));
+      return axesSpace.top + barchart_posHeight - Math.max(0, barchart_posYScale(value));
     }).attr("height", function(value) {
       return Math.abs(barchart_posYScale(value));
     }).attr("width", barchart_barWidth).style("fill", "green");
@@ -115,7 +115,6 @@ function gen_vis() {
     .attr("class", "line").attr("d", linechart_line)
     .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
 
-
   linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]]).enter().append("circle").attr("class", "dot")
     .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 7)
     .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
@@ -131,18 +130,37 @@ function gen_vis() {
       .attr("x", function(value, index) {
         return axesSpace.left + index * barchart_barWidth;
       }).attr("y", function(value) {
-        return barchart_posHeight - Math.max(0, barchart_posYScale(value));
+        return axesSpace.top + barchart_posHeight - Math.max(0, barchart_posYScale(value));
       }).attr("height", function(value) {
         return Math.abs(barchart_posYScale(value));
       }).attr("width", barchart_barWidth).style("fill", "green");
 
     linechart_dataset = linechart_datasetValues[curDistrict];
     linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]])
-    .transition().duration(transitionSpeed)
+      .transition().duration(transitionSpeed)
       .attr("class", "dot")
       .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 7)
       .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
-});
+  });
+
+  d3.select("#selector").on("input", function() {
+    curDistrict = d3.select("#selector").node().value;
+
+    linechart_dataset = linechart_datasetValues[curDistrict];
+    //Update lines
+    const lines = linechart_svg.selectAll(".line").datum(linechart_dataset).attr("class", "line");
+    lines.exit().remove();
+    lines.enter().append("path").attr("class", "line").attr("d", linechart_line);
+    lines.transition().duration(transitionSpeed).attr("d", linechart_line);
+
+    //Update dots
+    linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]])
+      .transition().duration(transitionSpeed)
+      .attr("class", "dot")
+      .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 7)
+      .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
+
+  });
 }
 
 function getMax(datasetValues) {
