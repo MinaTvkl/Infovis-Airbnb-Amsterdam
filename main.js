@@ -1,6 +1,7 @@
 var districtNames = ["Amsterdam", "Centrum", "West", "Nieuw-West", "Zuid", "Oost", "Noord", "Zuidoost"];
 var barchart_datasetValues = {};
 var linechart_datasetValues = {};
+var radarchart_datasetValues = {};
 
 var curYear = 2019;
 var curDistrict = "Amsterdam";
@@ -14,6 +15,11 @@ var axesSpace = {
   right: 20,
   bottom: 50,
   left: 40
+}
+
+var radarSpace = {
+  sides: 60,
+  topBottom: 60
 }
 
 var chartWidth = idiomWidth - axesSpace.left - axesSpace.right;
@@ -42,6 +48,94 @@ Promise.all([
 });
 
 function gen_vis() {
+  //https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
+  //Radar
+  var radarchart_max = 6;
+  var radarchart_min = 0;
+
+  let radarchart_dataNames = ["A", "B", "C", "D", "E", "F"];
+  let radarchart_dataset = [1, 2, 3, 4, 5, 6];
+  let radarchart_radius = Math.min(idiomWidth - radarSpace.sides, idiomHeight - radarSpace.topBottom);
+  let radarchart_center = radarchart_radius / 2;
+
+  var radarchart_axis = radarchart_datasetValues[1];
+
+  let radarchart_svg = d3.select("#radar-chart").append("svg")
+    .attr("height", idiomHeight)
+    .attr("width", idiomWidth)
+    .style("border", "1px solid");
+
+  var radarchart_ticksAmount = 3;
+  var radarchart_circleAmount = 6;
+
+  let radarchart_rScale = d3.scaleLinear().domain([radarchart_min, radarchart_max]).range([0, radarchart_radius / 2]);
+  var radarchart_ticks = [];
+  for (var i = 0; i <= radarchart_circleAmount; i++) {
+    radarchart_ticks.push(i * (radarchart_max - radarchart_min) / radarchart_circleAmount);
+  }
+
+  function angleToCoordinate(angle, value) {
+    console.log("Angle is " + angle);
+    let x = Math.sin(angle) * radarchart_rScale(value);
+    let y = Math.cos(angle) * radarchart_rScale(value);
+    console.log("Cosine is " + Math.cos(angle));
+    console.log("Value is " + value);
+    console.log("Length of the line is " + radarchart_rScale(value));
+    console.log("Radius of circle is " + radarchart_radius);
+    console.log("X IS " + x);
+    console.log("Y IS " + y);
+
+    return {
+      "x": x,
+      "y": -y
+    };
+  }
+
+  radarchart_ticks.forEach(t =>
+    radarchart_svg.append("circle")
+    .attr("cx", idiomWidth / 2)
+    .attr("cy", idiomHeight / 2)
+    .attr("fill", "none")
+    .attr("stroke", "gray")
+    .attr("r", radarchart_rScale(t))
+  );
+
+  var radarchart_yScale = d3.scaleLinear().domain([radarchart_min, radarchart_max]).range([radarchart_radius / 2, 0]);
+
+  radarchart_svg.append("g").call(d3.axisLeft(radarchart_yScale).ticks(radarchart_ticksAmount))
+    .attr("transform", "translate(" + idiomWidth / 2 + "," + radarSpace.topBottom / 2 + ")")
+    .selectAll("text").attr("transform", "translate(" + 0 + ", " + (-5) + ")");
+
+  for (var i = 0; i < radarchart_dataNames.length; i++) {
+    let cur = radarchart_dataNames[i];
+    var angle;
+    if (i == 0) {
+      angle = 0;
+    } else angle = (Math.PI / radarchart_dataNames.length * i * 2);
+    let line_coordinate = angleToCoordinate(angle, radarchart_max);
+    let label_coordinate = angleToCoordinate(angle, radarchart_max + 0.5);
+
+    //draw axis line
+    if (i == 0) {
+
+    } else {
+      radarchart_svg.append("line")
+        .attr("x1", idiomWidth / 2)
+        .attr("y1", idiomHeight / 2)
+        .attr("x2", idiomWidth / 2 + line_coordinate.x)
+        .attr("y2", idiomHeight / 2 + line_coordinate.y)
+        .attr("stroke", "black");
+    }
+
+    //draw axis label
+    radarchart_svg.append("text")
+      .attr("x", idiomWidth / 2 + label_coordinate.x)
+      .attr("y", idiomHeight / 2 + label_coordinate.y)
+      .text(cur);
+  }
+
+
+  //Barchart
   var barchart_datasetYears = [2014, 2015, 2016, 2017, 2018];
   var barchart_dataset = barchart_datasetValues[curYear - 1];
 

@@ -1,42 +1,52 @@
-<<<<<<< HEAD
-:root { --var-color-grey: #898989; }
-body { 
-	margin:0; 
-	position:fixed; 
-	top:0; 
-	right:0; 
-	bottom:0; 
-	left:0; 
-	font-family: Helvetica; ; 
-	}
+:root {
+  --var-color-grey: #898989;
+}
+
+body {
+  margin: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  font-family: Helvetica;
+  overflow-y: scroll;
+}
 
 text {
-	font-family: Helvetica;
-	color: var(--var-color-grey);
+  font-family: Helvetica;
+  color: var(--var-color-grey);
 }
+
 .axis path,
 .axis line {
-	fill: none;
-	stroke: var(--var-color-grey);
-	shape-rendering: crispEdges;
-}
-.x.axis {font-size: 15px;  }
-.y.axis {font-size: 12px; }
-
-#chart-container{
-	display: inline-block;
+  fill: none;
+  stroke: var(--var-color-grey);
+  shape-rendering: crispEdges;
 }
 
-#selectors{
-	display: inline;
-	margin:50;
-=======
+.x.axis {
+  font-size: 15px;
+}
+
+.y.axis {
+  font-size: 12px;
+}
+
+#chart-container {
+  display: inline-block;
+}
+
+#selectors {
+  display: inline;
+  margin: 50;
+}
+
 .line {
-    fill: none;
-    stroke: #ffab00;
-    stroke-width: 3;
+  fill: none;
+  stroke: #ffab00;
+  stroke-width: 3;
 }
-  
+
 .overlay {
   fill: none;
   pointer-events: all;
@@ -44,11 +54,11 @@ text {
 
 /* Style the dots by assigning a fill and stroke */
 .dot {
-    fill: #ffab00;
-    stroke: #fff;
+  fill: #ffab00;
+  stroke: #fff;
 }
-  .focus circle {
+
+.focus circle {
   fill: none;
   stroke: steelblue;
->>>>>>> d572f848f74d5b1c28eae1e523fe822e0d6da4d0
 }
