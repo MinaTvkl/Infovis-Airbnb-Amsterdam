@@ -1,42 +1,123 @@
 var districtNames = ["Amsterdam", "Centrum", "West", "Nieuw-West", "Zuid", "Oost", "Noord", "Zuidoost"];
-
-var idiomWidth = 500;
-var idiomHeight = 300;
+var barchart_datasetValues = {};
+var linechart_datasetValues = {};
 
 var curYear = 2019;
 var curDistrict = "Amsterdam";
 
-d3.json("/data/bar_chart/migration.json").then(function(data) {
-  var datasetValues = {
-    2014: Object.values(data.year2014),
-    2015: Object.values(data.year2015),
-    2016: Object.values(data.year2016),
-    2017: Object.values(data.year2017),
-    2018: Object.values(data.year2018)
+var idiomWidth = 500;
+var idiomHeight = 300;
+
+var axesSpace = {
+  top: 0,
+  right: 20,
+  bottom: 50,
+  left: 40
+}
+
+var chartWidth = idiomWidth - axesSpace.left - axesSpace.right;
+var chartHeight = idiomHeight - axesSpace.top - axesSpace.bottom;
+
+Promise.all([
+  d3.json("/data/bar_chart/migration.json"),
+  d3.json("/data/line_chart/avg_prices_district.json"),
+]).then(function(data) {
+  //Reading in barchart data
+  barchart_datasetValues = {
+    2014: Object.values(data[0].year2014),
+    2015: Object.values(data[0].year2015),
+    2016: Object.values(data[0].year2016),
+    2017: Object.values(data[0].year2017),
+    2018: Object.values(data[0].year2018)
+  };
+
+  //Reading in linechart data
+  for (var i = 0; i < Object.keys(data[1]).length; i++) {
+    linechart_datasetValues[Object.keys(data[1])[i]] = Object.values(data[1][Object.keys(data[1])[i]]);
   }
-  gen_vis_bar_chart(datasetValues);
+
+  //Calling render function
+  gen_vis();
 });
 
-d3.json("/data/line_chart/avg_prices_district.json").then(function(data) {
-  var datasetValues = {};
-  for (var i = 0; i < Object.keys(data).length; i++) {
-    datasetValues[Object.keys(data)[i]] = Object.values(data[Object.keys(data)[i]]);
-  }
+function gen_vis() {
+  var barchart_datasetYears = [2014, 2015, 2016, 2017, 2018];
+  var barchart_dataset = barchart_datasetValues[curYear - 1];
 
-  gen_vis_line_chart(datasetValues);
-});
+  var barchart_min = getMin(barchart_datasetValues);
+  var barchart_max = getMax(barchart_datasetValues);
+
+  var barchart_barWidth = Math.abs(chartWidth / barchart_datasetValues[2014].length);
+  var barchart_posPercentage = barchart_max / (barchart_max + Math.abs(barchart_min));
+
+  var barchart_posHeight = barchart_posPercentage * chartHeight;
+  var barchart_negHeight = chartHeight - barchart_posHeight;
+
+  var barchart_posYScale = d3.scaleLinear().domain([0, barchart_max]).range([0, barchart_posHeight]);
+  var barchart_yScale = d3.scaleLinear().domain([barchart_min, barchart_max]).range([chartHeight, 0]);
+  var barchart_xScale = d3.scaleBand().domain(districtNames).range([0, chartWidth]);
+
+  var barchart_svg = d3.select("#bar-chart")
+    .append("svg")
+    .attr("height", idiomHeight)
+    .attr("width", idiomWidth)
+    .style("border", "1px solid");
+
+  //Add data
+  barchart_svg.selectAll("rect").data(barchart_dataset).enter().append("rect")
+    .attr("x", function(value, index) {
+      return axesSpace.left + index * barchart_barWidth;
+    }).attr("y", function(value) {
+      return barchart_posHeight - Math.max(0, barchart_posYScale(value));
+    }).attr("height", function(value) {
+      return Math.abs(barchart_posYScale(value));
+    }).attr("width", barchart_barWidth).style("fill", "green");
+
+  //Add y axis
+  barchart_svg.append("g").attr("transform", function(d) {
+    return "translate(" + (axesSpace.left) + ", " + (axesSpace.top) + ")";
+  }).call(d3.axisLeft(barchart_yScale));
+
+  //Add x axis
+  barchart_svg.append("g").call(d3.axisBottom(barchart_xScale).tickSize(0))
+    .attr("transform", "translate(" + axesSpace.left + "," + (barchart_posHeight + axesSpace.top) + ")")
+    .selectAll("text").attr("transform", "translate(" + -1 * (barchart_barWidth / 4) + ", " + (barchart_negHeight + 20) + ") rotate(-45)");
+
+  d3.select("#year-slider").on("input", function() {
+    curYear = document.getElementById("year-slider").value;
+    barchart_dataset = barchart_datasetValues[curYear - 1];
+
+    barchart_svg.selectAll("rect").data(barchart_dataset)
+      .transition().duration(1000)
+      .attr("x", function(value, index) {
+        return axesSpace.left + index * barchart_barWidth;
+      }).attr("y", function(value) {
+        return barchart_posHeight - Math.max(0, barchart_posYScale(value));
+      }).attr("height", function(value) {
+        return Math.abs(barchart_posYScale(value));
+      }).attr("width", barchart_barWidth).style("fill", "green");
+  });
+
+}
+
+function getMax(datasetValues) {
+  return Math.max.apply(Math, Object.values(datasetValues).map(function(row) {
+    return Math.max.apply(Math, row);
+  }));
+}
+
+function getMin(datasetValues) {
+  return Math.min.apply(Math, Object.values(datasetValues).map(function(row) {
+    return Math.min.apply(Math, row);
+  }));
+}
 
 function gen_vis_line_chart(datasetValues) {
   var datasetYears = [2015, 2016, 2017, 2018, 2019];
 
   var dataset = datasetValues[curDistrict];
 
-  var axesSpace = {
-    top: 0,
-    right: 20,
-    bottom: 50,
-    left: 40
-  }
+
 
   var graphWidth = idiomWidth;
   var graphHeight = idiomHeight;
@@ -83,14 +164,18 @@ function gen_vis_line_chart(datasetValues) {
     .enter()
     .append("circle")
     .attr("class", "dot")
-    .attr("cx", function(value) {return xScale(curYear)})
-    .attr("cy", function(value) {return yScale(dataset[curYear-datasetYears[0]])})
+    .attr("cx", function(value) {
+      return xScale(curYear)
+    })
+    .attr("cy", function(value) {
+      return yScale(dataset[curYear - datasetYears[0]])
+    })
     .attr("r", 7)
     .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
 
-    d3.select("#year-slider").on("input", function() {
+  d3.select("#year-slider").on("input", function() {
 
-    });
+  });
 
 
 }
@@ -99,7 +184,7 @@ function gen_vis_line_chart(datasetValues) {
 function gen_vis_bar_chart(datasetValues) {
   var datasetYears = [2014, 2015, 2016, 2017, 2018];
 
-  var dataset = datasetValues[curYear -1];
+  var dataset = datasetValues[curYear - 1];
 
   var axesSpace = {
     top: 0,
