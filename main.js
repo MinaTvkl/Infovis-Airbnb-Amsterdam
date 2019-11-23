@@ -3,6 +3,9 @@ var districtNames = ["Amsterdam", "Centrum", "West", "Nieuw-West", "Zuid", "Oost
 var idiomWidth = 500;
 var idiomHeight = 300;
 
+var curYear = 2019;
+var curDistrict = "Amsterdam";
+
 d3.json("/data/bar_chart/migration.json").then(function(data) {
   var datasetValues = {
     2014: Object.values(data.year2014),
@@ -26,7 +29,7 @@ d3.json("/data/line_chart/avg_prices_district.json").then(function(data) {
 function gen_vis_line_chart(datasetValues) {
   var datasetYears = [2015, 2016, 2017, 2018, 2019];
 
-  var dataset = datasetValues["Amsterdam"];
+  var dataset = datasetValues[curDistrict];
 
   var axesSpace = {
     top: 0,
@@ -52,7 +55,7 @@ function gen_vis_line_chart(datasetValues) {
   var yScale = d3.scaleLinear().domain([min, max]).range([chartHeight, 0]);
 
   var line = d3.line().x(function(value, index) {
-    return xScale(index+datasetYears[0]);
+    return xScale(index + datasetYears[0]);
   }).y(function(value) {
     return yScale(value);
   });
@@ -74,13 +77,29 @@ function gen_vis_line_chart(datasetValues) {
     .attr("class", "line")
     .attr("d", line)
     .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
+
+  svg.selectAll(".dot")
+    .data([dataset[curYear]])
+    .enter()
+    .append("circle")
+    .attr("class", "dot")
+    .attr("cx", function(value) {return xScale(curYear)})
+    .attr("cy", function(value) {return yScale(dataset[curYear-datasetYears[0]])})
+    .attr("r", 7)
+    .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
+
+    d3.select("#year-slider").on("input", function() {
+
+    });
+
+
 }
 
 //Used https://bl.ocks.org/gurjeet/83189e2931d053187eab52887a870c5e as example
 function gen_vis_bar_chart(datasetValues) {
   var datasetYears = [2014, 2015, 2016, 2017, 2018];
 
-  var dataset = datasetValues[2018];
+  var dataset = datasetValues[curYear -1];
 
   var axesSpace = {
     top: 0,
@@ -147,7 +166,7 @@ function gen_vis_bar_chart(datasetValues) {
 
   d3.select("#year-slider").on("input", function() {
     var year = document.getElementById("year-slider").value;
-    dataset = datasetValues[year];
+    dataset = datasetValues[year - 1];
 
     svg.selectAll("rect")
       .data(dataset)
