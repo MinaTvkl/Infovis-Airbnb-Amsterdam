@@ -3,6 +3,7 @@ var indicatorNames = ["Criminality", "Nuisance", "Persons_avoidance", "Persons_i
 var barchart_datasetValues = {};
 var linechart_datasetValues = {};
 var radarchart_datasetValues = {};
+var map_datasetMap = {};
 
 var curYear = 2019;
 var curDistrict = "Amsterdam";
@@ -30,6 +31,7 @@ Promise.all([
   d3.json("/data/bar_chart/migration.json"),
   d3.json("/data/line_chart/avg_prices_district.json"),
   d3.json("/data/radar_chart/indicators.json"),
+  d3.json("/data/map/GEBIED_STADSDELEN.json")
 ]).then(function(data) {
   //Reading in barchart data
   barchart_datasetValues = {
@@ -48,15 +50,29 @@ Promise.all([
   //Reading in the radarchart data
   radarchart_datasetValues = data[2];
 
+  map_datasetMap = data[3];
 
   //Calling render function
   gen_vis();
 });
 
 function gen_vis() {
+  var projection = d3.geoMercator().translate([idiomWidth / 2, idiomHeight / 2]).scale(60000).center([4.9, 52.366667]);
+  var path = d3.geoPath().projection(projection);
+
+  let map_svg = d3.select("#map").append("svg")
+    .attr("width", idiomWidth)
+    .attr("height", idiomHeight);
+
+  map_svg.selectAll("path")
+    .data(map_datasetMap.features)
+    .enter()
+    .append("path")
+    .attr("class", "district")
+    .attr("d", path);
 
   function update_radarchart_dataset() {
-    var radarchart_dataset = []
+    var radarchart_dataset = [];
     indicatorNames.forEach(t =>
       radarchart_dataset.push(radarchart_datasetValues[t][curDistrict][curYear - 1])
     );
@@ -209,7 +225,7 @@ function gen_vis() {
   var linechart_datasetYears = [2015, 2016, 2017, 2018, 2019];
   var linechart_dataset = linechart_datasetValues[curDistrict];
 
-  var linechart_min = 0;//getMin(linechart_datasetValues);
+  var linechart_min = 0; //getMin(linechart_datasetValues);
   var linechart_max = getMax(linechart_datasetValues);
 
   var linechart_xScale = d3.scaleLinear().domain([linechart_datasetYears[0], linechart_datasetYears[linechart_datasetYears.length - 1]]).range([0, chartWidth]);
