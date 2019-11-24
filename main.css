@@ -1,0 +1,37 @@
+.line {
+  stroke-width: 3;
+  stroke: var(--blue);
+  stroke-opacity: 0.8;
+  fill: none;
+}
+
+.helpaxis {
+  stroke-width: 1;
+  stroke: var(--gray);
+  stroke-opacity: 0.5;
+  fill: none;
+}
+
+.axis {
+  stroke-width: 1;
+  stroke: var(--dark);
+  stroke-opacity: 1;
+  fill: none;
+}
+
+.label {
+  text-anchor: middle;
+  font-size: 12px;
+  color: var(--dark);
+}
+
+.bar {
+  fill: var(--green);
+}
+
+.dot {
+  fill: var(--blue);
+  stroke-width: 1;
+  stroke: var(--white);
+  stroke-opacity: 1;
+}

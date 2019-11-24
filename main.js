@@ -54,37 +54,45 @@ Promise.all([
 });
 
 function gen_vis() {
-  //https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
-  //Radar
-  var radarchart_dataset = []
-  indicatorNames.forEach(t =>
-    radarchart_dataset.push(radarchart_datasetValues[t][curDistrict][curYear - 1])
-  );
-  radarchart_dataset.push(radarchart_dataset[0]);
 
+  function update_radarchart_dataset() {
+    var radarchart_dataset = []
+    indicatorNames.forEach(t =>
+      radarchart_dataset.push(radarchart_datasetValues[t][curDistrict][curYear - 1])
+    );
+    radarchart_dataset.push(radarchart_dataset[0]);
+    return radarchart_dataset;
+  }
+  //Create radarchart data array
+  var radarchart_dataset = update_radarchart_dataset();
+
+  //Set max and min values
   var radarchart_max = 300;
   var radarchart_min = 0;
 
+  //Create dimensions of chart
   let radarchart_diameter = Math.min(idiomWidth - 2 * radarSpace.sides, idiomHeight - 2 * radarSpace.topBottom);
   let radarchart_radius = radarchart_diameter / 2;
 
-  var radarchart_axis = radarchart_datasetValues[1];
-
+  //Creating the idiom
   let radarchart_svg = d3.select("#radar-chart").append("svg")
     .attr("height", idiomHeight)
-    .attr("width", idiomWidth)
-    .style("border", "1px solid");
+    .attr("width", idiomWidth);
 
+  //Setting amount of circles and amount of ticks on axis
   var radarchart_ticksAmount = 6;
   var radarchart_circleAmount = 6;
 
   let radarchart_rScale = d3.scaleLinear().domain([radarchart_min, radarchart_max]).range([0, radarchart_radius]);
-  var radarchart_ticks = [];
-  for (var i = 0; i <= radarchart_circleAmount; i++) {
-    radarchart_ticks.push(i * (radarchart_max - radarchart_min) / radarchart_circleAmount);
-  }
+  var radarchart_yScale = d3.scaleLinear().domain([radarchart_min, radarchart_max]).range([radarchart_radius, 0]);
 
-  function angleToCoordinate(angle, value) {
+  //Function to transform
+  function indexToCoordinate(index, value) {
+    var angle;
+    if (index == 0) {
+      angle = 0;
+    } else angle = (Math.PI / indicatorNames.length * index * 2);
+
     let x = Math.sin(angle) * radarchart_rScale(value);
     let y = Math.cos(angle) * radarchart_rScale(value);
 
@@ -94,74 +102,61 @@ function gen_vis() {
     };
   }
 
-  radarchart_ticks.forEach(t =>
-    radarchart_svg.append("circle")
-    .attr("cx", idiomWidth / 2)
-    .attr("cy", idiomHeight / 2)
-    .attr("fill", "none")
-    .attr("stroke", "gray")
-    .attr("r", radarchart_rScale(t))
-  );
+  //Calculates x and y coordinate based on value and index
+  let radarchart_line = d3.line()
+    .x(function(value, index) {
+      return indexToCoordinate(index, value).x;
+    })
+    .y(function(value, index) {
+      return indexToCoordinate(index, value).y;
+    });
 
-  var radarchart_yScale = d3.scaleLinear().domain([radarchart_min, radarchart_max]).range([radarchart_radius, 0]);
+  //Function that fills arrat with a value
+  function fillArray(value, len) {
+    var arr = [];
+    for (var i = 0; i < len; i++) {
+      arr.push(value);
+    }
+    return arr;
+  }
 
+  //Create axis rings
+  for (var i = 1; i <= radarchart_circleAmount; i++) {
+    console.log(fillArray(radarchart_max / radarchart_circleAmount * i, indicatorNames.length + 1));
+    radarchart_svg.append("path").datum(fillArray(radarchart_max / radarchart_circleAmount * i, indicatorNames.length + 1))
+      .attr("d", radarchart_line)
+      .attr("class", "helpaxis")
+      .attr("transform", "translate(" + idiomWidth / 2 + "," + idiomHeight / 2 + ")");
+  }
+
+  //Create initial axis with numbers
   radarchart_svg.append("g").call(d3.axisLeft(radarchart_yScale).ticks(radarchart_ticksAmount))
     .attr("transform", "translate(" + idiomWidth / 2 + "," + radarSpace.topBottom + ")")
     .selectAll("text").attr("transform", "translate(" + 0 + ", " + (-5) + ")");
 
+  //Draw labels and additional axis
   for (var i = 0; i < indicatorNames.length; i++) {
     let cur = indicatorNames[i].replace("_", " ");
-    var angle;
-    if (i == 0) {
-      angle = 0;
-    } else angle = (Math.PI / indicatorNames.length * i * 2);
-    let line_coordinate = angleToCoordinate(angle, radarchart_max);
-    let label_coordinate = angleToCoordinate(angle, radarchart_max + 90);
 
-    //draw axis line
+    let line_coordinate = indexToCoordinate(i, radarchart_max);
+    let label_coordinate = indexToCoordinate(i, radarchart_max + radarchart_max / 3.5);
+
+    //Draw axis line
     if (i != 0) {
-      radarchart_svg.append("line")
-        .attr("x1", idiomWidth / 2)
-        .attr("y1", idiomHeight / 2)
-        .attr("x2", idiomWidth / 2 + line_coordinate.x)
-        .attr("y2", idiomHeight / 2 + line_coordinate.y)
-        .attr("stroke", "black");
+      radarchart_svg.append("line").attr("class", "axis")
+        .attr("x1", idiomWidth / 2).attr("y1", idiomHeight / 2)
+        .attr("x2", idiomWidth / 2 + line_coordinate.x).attr("y2", idiomHeight / 2 + line_coordinate.y);
     }
 
-    //draw axis label
-    radarchart_svg.append("g").attr("class", "tick").append("text").style("text-anchor", "middle").style("font-size", "12px").style("color", "#898989")
-      .attr("dy", "0.3em").attr("x", idiomWidth / 2 + label_coordinate.x).attr("y", idiomHeight / 2 + label_coordinate.y)
-      .text(cur);
+    //Draw axis label
+    radarchart_svg.append("text").attr("class", "label")
+      .attr("x", idiomWidth / 2 + label_coordinate.x).attr("y", idiomHeight / 2 + label_coordinate.y)
+      .attr("dy", "0.5em").text(cur);
   }
 
-  let radarchart_line = d3.line()
-    .x(function(value, index) {
-      var angle;
-      if (index == 0) {
-        angle = 0;
-      } else angle = (Math.PI / indicatorNames.length * index * 2);
-      return angleToCoordinate(angle, value).x;
-    })
-    .y(function(value, index) {
-      var angle;
-      if (index == 0) {
-        angle = 0;
-      } else angle = (Math.PI / indicatorNames.length * index * 2);
-      return angleToCoordinate(angle, value).y;
-    });
-
-  radarchart_svg.append("path")
-    .datum(radarchart_dataset)
-    .attr("d", radarchart_line)
-    .attr("class", "line")
-    .attr("transform", "translate(" + idiomWidth / 2 + "," + idiomHeight / 2 + ")")
-    .attr("stroke-width", 3)
-    .attr("stroke", "#ffab00")
-    .attr("stroke-opacity", 1)
-    .attr("fill", "none")
-    .attr("opacity", 0.7);
-
-
+  radarchart_svg.append("path").attr("class", "line")
+    .datum(radarchart_dataset).attr("d", radarchart_line)
+    .attr("transform", "translate(" + idiomWidth / 2 + "," + idiomHeight / 2 + ")");
 
 
   //Barchart
@@ -184,18 +179,17 @@ function gen_vis() {
   var barchart_svg = d3.select("#bar-chart")
     .append("svg")
     .attr("height", idiomHeight)
-    .attr("width", idiomWidth)
-    .style("border", "1px solid");
+    .attr("width", idiomWidth);
 
   //Add data
-  barchart_svg.selectAll("rect").data(barchart_dataset).enter().append("rect")
+  barchart_svg.selectAll("rect").data(barchart_dataset).enter().append("rect").attr("class", "bar")
     .attr("x", function(value, index) {
       return axesSpace.left + index * barchart_barWidth;
     }).attr("y", function(value) {
       return axesSpace.top + barchart_posHeight - Math.max(0, barchart_posYScale(value));
     }).attr("height", function(value) {
       return Math.abs(barchart_posYScale(value));
-    }).attr("width", barchart_barWidth).style("fill", "green");
+    }).attr("width", barchart_barWidth);
 
   //Add y axis
   barchart_svg.append("g").attr("transform", function(d) {
@@ -225,8 +219,7 @@ function gen_vis() {
   });
 
   var linechart_svg = d3.select("#line-chart").append("svg")
-    .attr("height", idiomHeight).attr("width", idiomWidth)
-    .style("border", "1px solid");
+    .attr("height", idiomHeight).attr("width", idiomWidth);
 
   linechart_svg.append("g").call(d3.axisBottom(linechart_xScale).ticks(linechart_datasetYears.length).tickFormat(d3.format("d")))
     .attr("transform", "translate(" + axesSpace.left + "," + (chartHeight + axesSpace.top) + ")");
@@ -236,15 +229,10 @@ function gen_vis() {
 
   linechart_svg.append("path").datum(linechart_dataset)
     .attr("class", "line").attr("d", linechart_line)
-    .attr("stroke-width", 3)
-    .attr("stroke", "#ffab00")
-    .attr("stroke-opacity", 1)
-    .attr("fill", "none")
-    .attr("opacity", 0.7)
     .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
 
   linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]]).enter().append("circle").attr("class", "dot")
-    .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 7)
+    .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 6)
     .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
 
 
@@ -261,7 +249,7 @@ function gen_vis() {
         return axesSpace.top + barchart_posHeight - Math.max(0, barchart_posYScale(value));
       }).attr("height", function(value) {
         return Math.abs(barchart_posYScale(value));
-      }).attr("width", barchart_barWidth).style("fill", "green");
+      }).attr("width", barchart_barWidth);
 
     linechart_dataset = linechart_datasetValues[curDistrict];
     linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]])
