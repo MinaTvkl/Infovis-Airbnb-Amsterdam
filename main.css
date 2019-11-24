@@ -27,6 +27,11 @@
 
 .bar {
   fill: var(--green);
+  opacity: 0.2;
+}
+
+.bar.highlighted {
+  opacity: 1;
 }
 
 .dot {

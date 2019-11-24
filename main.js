@@ -189,7 +189,10 @@ function gen_vis() {
       return axesSpace.top + barchart_posHeight - Math.max(0, barchart_posYScale(value));
     }).attr("height", function(value) {
       return Math.abs(barchart_posYScale(value));
-    }).attr("width", barchart_barWidth);
+    }).attr("width", barchart_barWidth)
+    .classed("highlighted", function(value, index) {
+      return (districtNames[index] == curDistrict);
+    });
 
   //Add y axis
   barchart_svg.append("g").attr("transform", function(d) {
@@ -274,6 +277,11 @@ function gen_vis() {
   d3.select("#selector").on("input", function() {
     curDistrict = d3.select("#selector").node().value;
 
+    barchart_svg.selectAll(".bar").classed("highlighted", function(value, index) {
+      return (districtNames[index] == curDistrict);
+    });
+
+
     linechart_dataset = linechart_datasetValues[curDistrict];
     //Update lines
     const linechart_lines = linechart_svg.selectAll(".line").datum(linechart_dataset).attr("class", "line");
@@ -285,7 +293,7 @@ function gen_vis() {
     linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]])
       .transition().duration(transitionSpeed)
       .attr("class", "dot")
-      .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 7)
+      .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]]))
       .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
 
     //Update lines
