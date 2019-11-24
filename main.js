@@ -25,6 +25,7 @@ var radarSpace = {
 
 var chartWidth = idiomWidth - axesSpace.left - axesSpace.right;
 var chartHeight = idiomHeight - axesSpace.top - axesSpace.bottom;
+
 Promise.all([
   d3.json("/data/bar_chart/migration.json"),
   d3.json("/data/line_chart/avg_prices_district.json"),
@@ -59,11 +60,11 @@ function gen_vis() {
   indicatorNames.forEach(t =>
     radarchart_dataset.push(radarchart_datasetValues[t][curDistrict][curYear - 1])
   );
+  radarchart_dataset.push(radarchart_dataset[0]);
 
-  var radarchart_max = 250;
+  var radarchart_max = 300;
   var radarchart_min = 0;
 
-  // let radarchart_dataset = [1, 2, 3, 4, 5, 6];
   let radarchart_diameter = Math.min(idiomWidth - 2 * radarSpace.sides, idiomHeight - 2 * radarSpace.topBottom);
   let radarchart_radius = radarchart_diameter / 2;
 
@@ -75,7 +76,7 @@ function gen_vis() {
     .style("border", "1px solid");
 
   var radarchart_ticksAmount = 6;
-  var radarchart_circleAmount = 5;
+  var radarchart_circleAmount = 6;
 
   let radarchart_rScale = d3.scaleLinear().domain([radarchart_min, radarchart_max]).range([0, radarchart_radius]);
   var radarchart_ticks = [];
@@ -134,36 +135,32 @@ function gen_vis() {
   }
 
   let radarchart_line = d3.line()
-    .x(d => d.x)
-    .y(d => d.y);
-
-  function getPathCoordinates() {
-    let coordinates = [];
-    for (var i = 0; i < indicatorNames.length; i++) {
-      let ft_name = radarchart_dataset[i];
-      if (i == 0) {
+    .x(function(value, index) {
+      var angle;
+      if (index == 0) {
         angle = 0;
-      } else angle = (Math.PI / indicatorNames.length * i * 2);
-      coordinates.push(angleToCoordinate(angle, radarchart_dataset[i]));
-    }
-    coordinates.push(angleToCoordinate(0, radarchart_dataset[0]));
-    return coordinates;
-  }
+      } else angle = (Math.PI / indicatorNames.length * index * 2);
+      return angleToCoordinate(angle, value).x;
+    })
+    .y(function(value, index) {
+      var angle;
+      if (index == 0) {
+        angle = 0;
+      } else angle = (Math.PI / indicatorNames.length * index * 2);
+      return angleToCoordinate(angle, value).y;
+    });
 
-  for (var i = 0; i < radarchart_dataset.length; i++) {
-    let coordinates = getPathCoordinates();
+  radarchart_svg.append("path")
+    .datum(radarchart_dataset)
+    .attr("d", radarchart_line)
+    .attr("class", "line")
+    .attr("transform", "translate(" + idiomWidth / 2 + "," + idiomHeight / 2 + ")")
+    .attr("stroke-width", 3)
+    .attr("stroke", "#ffab00")
+    .attr("stroke-opacity", 1)
+    .attr("fill", "none")
+    .attr("opacity", 0.7);
 
-    //draw the path element
-    radarchart_svg.append("path")
-      .datum(coordinates)
-      .attr("d", radarchart_line)
-      .attr("transform", "translate(" + idiomWidth / 2 + "," + idiomHeight / 2 + ")")
-      .attr("stroke-width", 3)
-      .attr("stroke", "#ffab00")
-      .attr("stroke-opacity", 1)
-      .attr("fill", "none")
-      .attr("opacity", 0.5);
-  }
 
 
 
@@ -274,10 +271,10 @@ function gen_vis() {
 
     linechart_dataset = linechart_datasetValues[curDistrict];
     //Update lines
-    const linehchart_lines = linechart_svg.selectAll(".line").datum(linechart_dataset).attr("class", "line");
-    linehchart_lines.exit().remove();
-    linehchart_lines.enter().append("path").attr("class", "line").attr("d", linechart_line);
-    linehchart_lines.transition().duration(transitionSpeed).attr("d", linechart_line);
+    const linechart_lines = linechart_svg.selectAll(".line").datum(linechart_dataset).attr("class", "line");
+    linechart_lines.exit().remove();
+    linechart_lines.enter().append("path").attr("class", "line").attr("d", linechart_line);
+    linechart_lines.transition().duration(transitionSpeed).attr("d", linechart_line);
 
     //Update dots
     linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]])
@@ -287,14 +284,17 @@ function gen_vis() {
       .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
 
     //Update lines
-    var radarchart_dataset = []
+    radarchart_dataset = [];
     indicatorNames.forEach(t =>
       radarchart_dataset.push(radarchart_datasetValues[t][curDistrict][curYear - 1])
     );
-    const radarchart_lines = radarchart_svg.selectAll(".line").datum(radarchart_dataset).attr("class", "line");
-    lines.exit().remove();
-    lines.enter().append("path").attr("class", "line").attr("d", radarchart_line);
-    lines.transition().duration(transitionSpeed).attr("d", radarchart_line);
+    radarchart_dataset.push(radarchart_dataset[0]);
+    console.log(radarchart_dataset);
+    const radarchart_lines = radarchart_svg.selectAll(".line").datum(radarchart_dataset);
+    radarchart_lines.exit().remove();
+    radarchart_lines.enter().append("path").attr("class", "line").attr("d", radarchart_line);
+    radarchart_lines.transition().duration(transitionSpeed).attr("d", radarchart_line);
+
   });
 }
 
