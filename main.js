@@ -236,6 +236,11 @@ function gen_vis() {
 
   linechart_svg.append("path").datum(linechart_dataset)
     .attr("class", "line").attr("d", linechart_line)
+    .attr("stroke-width", 3)
+    .attr("stroke", "#ffab00")
+    .attr("stroke-opacity", 1)
+    .attr("fill", "none")
+    .attr("opacity", 0.7)
     .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
 
   linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]]).enter().append("circle").attr("class", "dot")
@@ -264,6 +269,18 @@ function gen_vis() {
       .attr("class", "dot")
       .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 7)
       .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
+
+    //Update lines
+    radarchart_dataset = [];
+    indicatorNames.forEach(t =>
+      radarchart_dataset.push(radarchart_datasetValues[t][curDistrict][curYear - 1])
+    );
+    radarchart_dataset.push(radarchart_dataset[0]);
+    console.log(radarchart_dataset);
+    const radarchart_lines = radarchart_svg.selectAll(".line").datum(radarchart_dataset);
+    radarchart_lines.exit().remove();
+    radarchart_lines.enter().append("path").attr("class", "line").attr("d", radarchart_line);
+    radarchart_lines.transition().duration(transitionSpeed).attr("d", radarchart_line);
   });
 
   d3.select("#selector").on("input", function() {
@@ -294,7 +311,6 @@ function gen_vis() {
     radarchart_lines.exit().remove();
     radarchart_lines.enter().append("path").attr("class", "line").attr("d", radarchart_line);
     radarchart_lines.transition().duration(transitionSpeed).attr("d", radarchart_line);
-
   });
 }
 
