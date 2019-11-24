@@ -209,7 +209,7 @@ function gen_vis() {
   var linechart_datasetYears = [2015, 2016, 2017, 2018, 2019];
   var linechart_dataset = linechart_datasetValues[curDistrict];
 
-  var linechart_min = getMin(linechart_datasetValues);
+  var linechart_min = 0;//getMin(linechart_datasetValues);
   var linechart_max = getMax(linechart_datasetValues);
 
   var linechart_xScale = d3.scaleLinear().domain([linechart_datasetYears[0], linechart_datasetYears[linechart_datasetYears.length - 1]]).range([0, chartWidth]);
