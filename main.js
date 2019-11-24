@@ -303,18 +303,6 @@ function gen_vis() {
       .attr("class", "dot")
       .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 7)
       .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
-    linechart_svg.selectAll("circle")
-      .data(values[1])
-      .enter()
-      .append("circle")
-      .attr("class", "circles")
-      .attr("cx", function(d) {
-        return projection([d.Longitude, d.Lattitude])[0];
-      })
-      .attr("cy", function(d) {
-        return projection([d.Longitude, d.Lattitude])[1];
-      })
-      .attr("r", "1px"),
 
       //Update lines
       radarchart_dataset = [];
