@@ -4,6 +4,7 @@ var barchart_datasetValues = {};
 var linechart_datasetValues = {};
 var radarchart_datasetValues = {};
 var map_datasetMap = {};
+var map_datasetListings = {};
 
 var curYear = 2019;
 var curDistrict = "Amsterdam";
@@ -31,7 +32,8 @@ Promise.all([
   d3.json("/data/bar_chart/migration.json"),
   d3.json("/data/line_chart/avg_prices_district.json"),
   d3.json("/data/radar_chart/indicators.json"),
-  d3.json("/data/map/GEBIED_STADSDELEN.json")
+  d3.json("/data/map/GEBIED_STADSDELEN_EXWATER.json"),
+  d3.json("/data/map/csvjson.json")
 ]).then(function(data) {
   //Reading in barchart data
   barchart_datasetValues = {
@@ -52,11 +54,18 @@ Promise.all([
 
   map_datasetMap = data[3];
 
+  map_datasetListings = data[4];
+
   //Calling render function
   gen_vis();
 });
 
 function gen_vis() {
+
+  function processPosition(string, position) {
+    return parseFloat(string.substring(0, position) + "." + string.substring(position));
+  }
+
   var projection = d3.geoMercator().translate([idiomWidth / 2, idiomHeight / 2]).scale(60000).center([4.9, 52.366667]);
   var path = d3.geoPath().projection(projection);
 
@@ -68,8 +77,26 @@ function gen_vis() {
     .data(map_datasetMap.features)
     .enter()
     .append("path")
-    .attr("class", "district")
+    .classed("highlighted", function(value) {
+      if (curDistrict == "Amsterdam") return true;
+      else if (curDistrict == value.properties.Stadsdeel) return true;
+      else return false;
+    })
+    .classed("district", true)
     .attr("d", path);
+
+  map_svg.selectAll("circle")
+    .data(map_datasetListings)
+    .enter()
+    .append("circle")
+    .attr("class", "circles")
+    .attr("cx", function(d) {
+      return projection([processPosition(d.longitude.toString(), 1), processPosition(d.latitude.toString(), 2)])[0];
+    })
+    .attr("cy", function(d) {
+      return projection([processPosition(d.longitude.toString(), 1), processPosition(d.latitude.toString(), 2)])[1];
+    })
+    .attr("r", "0.2px");
 
   function update_radarchart_dataset() {
     var radarchart_dataset = [];
@@ -276,9 +303,21 @@ function gen_vis() {
       .attr("class", "dot")
       .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 7)
       .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
+    linechart_svg.selectAll("circle")
+      .data(values[1])
+      .enter()
+      .append("circle")
+      .attr("class", "circles")
+      .attr("cx", function(d) {
+        return projection([d.Longitude, d.Lattitude])[0];
+      })
+      .attr("cy", function(d) {
+        return projection([d.Longitude, d.Lattitude])[1];
+      })
+      .attr("r", "1px"),
 
-    //Update lines
-    radarchart_dataset = [];
+      //Update lines
+      radarchart_dataset = [];
     indicatorNames.forEach(t =>
       radarchart_dataset.push(radarchart_datasetValues[t][curDistrict][curYear - 1])
     );
@@ -296,6 +335,16 @@ function gen_vis() {
     barchart_svg.selectAll(".bar").classed("highlighted", function(value, index) {
       return (districtNames[index] == curDistrict);
     });
+
+    map_svg.selectAll("path")
+      .data(map_datasetMap.features)
+      .classed("highlighted", function(value) {
+        if (curDistrict == "Amsterdam") return true;
+        else if (curDistrict == value.properties.Stadsdeel) return true;
+        else return false;
+      })
+      .classed("district", true)
+      .attr("d", path);
 
 
     linechart_dataset = linechart_datasetValues[curDistrict];
