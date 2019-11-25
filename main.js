@@ -34,7 +34,7 @@ Promise.all([
   d3.json("/data/radar_chart/indicators.json"),
   d3.json("/data/map/GEBIED_STADSDELEN_EXWATER.json"),
   d3.json("/data/map/csvjson.json")
-]).then(function(data) {
+]).then(function (data) {
   //Reading in barchart data
   barchart_datasetValues = {
     2014: Object.values(data[0].year2014),
@@ -77,7 +77,7 @@ function gen_vis() {
     .data(map_datasetMap.features)
     .enter()
     .append("path")
-    .classed("highlighted", function(value) {
+    .classed("highlighted", function (value) {
       if (curDistrict == "Amsterdam") return true;
       else if (curDistrict == value.properties.Stadsdeel) return true;
       else return false;
@@ -90,10 +90,10 @@ function gen_vis() {
     .enter()
     .append("circle")
     .attr("class", "circles")
-    .attr("cx", function(d) {
+    .attr("cx", function (d) {
       return projection([processPosition(d.longitude.toString(), 1), processPosition(d.latitude.toString(), 2)])[0];
     })
-    .attr("cy", function(d) {
+    .attr("cy", function (d) {
       return projection([processPosition(d.longitude.toString(), 1), processPosition(d.latitude.toString(), 2)])[1];
     })
     .attr("r", "0.2px");
@@ -147,10 +147,10 @@ function gen_vis() {
 
   //Calculates x and y coordinate based on value and index
   let radarchart_line = d3.line()
-    .x(function(value, index) {
+    .x(function (value, index) {
       return indexToCoordinate(index, value).x;
     })
-    .y(function(value, index) {
+    .y(function (value, index) {
       return indexToCoordinate(index, value).y;
     });
 
@@ -226,19 +226,19 @@ function gen_vis() {
 
   //Add data
   barchart_svg.selectAll("rect").data(barchart_dataset).enter().append("rect").attr("class", "bar")
-    .attr("x", function(value, index) {
+    .attr("x", function (value, index) {
       return axesSpace.left + index * barchart_barWidth;
-    }).attr("y", function(value) {
+    }).attr("y", function (value) {
       return axesSpace.top + barchart_posHeight - Math.max(0, barchart_posYScale(value));
-    }).attr("height", function(value) {
+    }).attr("height", function (value) {
       return Math.abs(barchart_posYScale(value));
     }).attr("width", barchart_barWidth)
-    .classed("highlighted", function(value, index) {
+    .classed("highlighted", function (value, index) {
       return (districtNames[index] == curDistrict);
     });
 
   //Add y axis
-  barchart_svg.append("g").attr("transform", function(d) {
+  barchart_svg.append("g").attr("transform", function (d) {
     return "translate(" + (axesSpace.left) + ", " + (axesSpace.top) + ")";
   }).call(d3.axisLeft(barchart_yScale));
 
@@ -258,9 +258,9 @@ function gen_vis() {
   var linechart_xScale = d3.scaleLinear().domain([linechart_datasetYears[0], linechart_datasetYears[linechart_datasetYears.length - 1]]).range([0, chartWidth]);
   var linechart_yScale = d3.scaleLinear().domain([linechart_min, linechart_max]).range([chartHeight, 0]);
 
-  var linechart_line = d3.line().x(function(value, index) {
+  var linechart_line = d3.line().x(function (value, index) {
     return linechart_xScale(index + linechart_datasetYears[0]);
-  }).y(function(value) {
+  }).y(function (value) {
     return linechart_yScale(value);
   });
 
@@ -280,20 +280,39 @@ function gen_vis() {
   linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]]).enter().append("circle").attr("class", "dot")
     .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 6)
     .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
+  /*
+  // testing tooltip
+  var tooltip = d3.select("#line-chart")
+    .append("div")
+    .style("position", "absolute")
+    .style("visibility", "hidden")
+    .style("background-color", "white")
+    .style("border", "solid")
+    .style("border-width", "1px")
+    .style("border-radius", "5px")
+    .style("padding", "10px")
+    .html("<p>I'm a tooltip written in HTML</p><img src='https://github.com/holtzy/D3-graph-gallery/blob/master/img/section/ArcSmal.png?raw=true'></img><br>Fancy<br><span style='font-size: 40px;'>Isn't it?</span>");
 
+
+  //
+  d3.select("#line-chart")
+    .on("mouseover", function () { return tooltip.style("visibility", "visible"); })
+    .on("mousemove", function () { return tooltip.style("top", (event.pageY - 400) + "px").style("left", (event.pageX - 600) + "px"); })
+    .on("mouseout", function () { return tooltip.style("visibility", "hidden"); });
+  */
 
   //Interactivity
-  d3.select("#year-slider").on("input", function() {
+  d3.select("#year-slider").on("input", function () {
     curYear = document.getElementById("year-slider").value;
 
     barchart_dataset = barchart_datasetValues[curYear - 1];
     barchart_svg.selectAll("rect").data(barchart_dataset)
       .transition().duration(transitionSpeed)
-      .attr("x", function(value, index) {
+      .attr("x", function (value, index) {
         return axesSpace.left + index * barchart_barWidth;
-      }).attr("y", function(value) {
+      }).attr("y", function (value) {
         return axesSpace.top + barchart_posHeight - Math.max(0, barchart_posYScale(value));
-      }).attr("height", function(value) {
+      }).attr("height", function (value) {
         return Math.abs(barchart_posYScale(value));
       }).attr("width", barchart_barWidth);
 
@@ -304,8 +323,8 @@ function gen_vis() {
       .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 7)
       .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
 
-      //Update lines
-      radarchart_dataset = [];
+    //Update lines
+    radarchart_dataset = [];
     indicatorNames.forEach(t =>
       radarchart_dataset.push(radarchart_datasetValues[t][curDistrict][curYear - 1])
     );
@@ -317,16 +336,16 @@ function gen_vis() {
     radarchart_lines.transition().duration(transitionSpeed).attr("d", radarchart_line);
   });
 
-  d3.select("#selector").on("input", function() {
+  d3.select("#selector").on("input", function () {
     curDistrict = d3.select("#selector").node().value;
 
-    barchart_svg.selectAll(".bar").classed("highlighted", function(value, index) {
+    barchart_svg.selectAll(".bar").classed("highlighted", function (value, index) {
       return (districtNames[index] == curDistrict);
     });
 
     map_svg.selectAll("path")
       .data(map_datasetMap.features)
-      .classed("highlighted", function(value) {
+      .classed("highlighted", function (value) {
         if (curDistrict == "Amsterdam") return true;
         else if (curDistrict == value.properties.Stadsdeel) return true;
         else return false;
@@ -364,13 +383,13 @@ function gen_vis() {
 }
 
 function getMax(datasetValues) {
-  return Math.max.apply(Math, Object.values(datasetValues).map(function(row) {
+  return Math.max.apply(Math, Object.values(datasetValues).map(function (row) {
     return Math.max.apply(Math, row);
   }));
 }
 
 function getMin(datasetValues) {
-  return Math.min.apply(Math, Object.values(datasetValues).map(function(row) {
+  return Math.min.apply(Math, Object.values(datasetValues).map(function (row) {
     return Math.min.apply(Math, row);
   }));
 }
