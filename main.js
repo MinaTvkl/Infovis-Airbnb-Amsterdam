@@ -67,7 +67,7 @@ function gen_vis() {
   //   return parseFloat(string.substring(0, position) + "." + string.substring(position));
   // }
 
-  var projection = d3.geoMercator().translate([idiomWidth / 2, idiomHeight / 2]).scale(60000).center([4.9, 52.366667]);
+  var projection = d3.geoMercator().translate([idiomWidth / 2, idiomHeight / 2]).scale(60000).center([4.9, 52.36]);
   var path = d3.geoPath().projection(projection);
 
   var map_max = 2000;
@@ -91,7 +91,7 @@ function gen_vis() {
     .attr("d", path)
     .on("mouseover", function(value, index) {
       tooltip.style("display", "block");
-      tooltip.html(value.properties.Stadsdeel + ": " + map_datasetListings[curYear -1][value.properties.Stadsdeel]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
+      tooltip.html(value.properties.Stadsdeel + ": " + map_datasetListings[curYear - 1][value.properties.Stadsdeel]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
     })
     .on("mousemove", function() {
       tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");
@@ -101,7 +101,11 @@ function gen_vis() {
     })
     .style("fill", function(value) {
       // return "green";
-      return map_sequentialScale(map_datasetListings[curYear -1][value.properties.Stadsdeel]);
+      return map_sequentialScale(map_datasetListings[curYear - 1][value.properties.Stadsdeel]);
+    })
+    .on("click", function(value) {
+      d3.select("#selector").node().value = value.properties.Stadsdeel;
+      d3.select("#selector").node().dispatchEvent(new Event('input'));
     });
 
   //
@@ -367,6 +371,11 @@ function gen_vis() {
   d3.select("#year-slider").on("input", function() {
     curYear = document.getElementById("year-slider").value;
 
+    map_svg.selectAll("path").style("fill", function(value) {
+      // return "green";
+      return map_sequentialScale(map_datasetListings[curYear - 1][value.properties.Stadsdeel]);
+    });
+
     barchart_dataset = barchart_datasetValues[curYear - 1];
     barchart_svg.selectAll("rect").data(barchart_dataset)
       .transition().duration(transitionSpeed)
@@ -406,7 +415,6 @@ function gen_vis() {
     });
 
     map_svg.selectAll("path")
-      .data(map_datasetMap.features)
       .classed("highlighted", function(value) {
         if (curDistrict == "Amsterdam") return true;
         else if (curDistrict == value.properties.Stadsdeel) return true;
