@@ -17,7 +17,7 @@ var axesSpace = {
   top: 20,
   right: 20,
   bottom: 50,
-  left: 40
+  left: 60
 }
 
 var radarSpace = {
@@ -199,7 +199,15 @@ function gen_vis() {
 
   radarchart_svg.append("path").attr("class", "line")
     .datum(radarchart_dataset).attr("d", radarchart_line)
-    .attr("transform", "translate(" + idiomWidth / 2 + "," + idiomHeight / 2 + ")");
+    .attr("transform", "translate(" + idiomWidth / 2 + "," + idiomHeight / 2 + ")")
+  //added exact values on hover but has to update on district/year change
+    .append("svg:title")
+    .text(function (value) {
+      return "Criminality: " + value[0] + "\n" +
+      "Nuicance: " + value[1] + "\n" +
+      "Avoidance: " + value[2] + "\n" +
+      "Inconvenience: " + value[3] + "\n" + 
+      "Safety: " + value[4] + "\n";});
 
 
   //Barchart
@@ -235,18 +243,31 @@ function gen_vis() {
     }).attr("width", barchart_barWidth)
     .classed("highlighted", function (value, index) {
       return (districtNames[index] == curDistrict);
-    });
+    })
+    //shows on hover y value but needs to be changed with update of year
+    .append("svg:title")
+    .text(function (value) {
+      return "People/year: " + value;});
 
   //Add y axis
   barchart_svg.append("g").attr("transform", function (d) {
     return "translate(" + (axesSpace.left) + ", " + (axesSpace.top) + ")";
   }).call(d3.axisLeft(barchart_yScale));
 
+  //adds y-axis label 
+  barchart_svg.append("text")
+    .attr("class", "y label")
+    .attr("text-anchor", "end")
+    .attr("y", -1)
+    .attr("x", 0 - ((chartHeight + axesSpace.bottom) / 2))
+    .attr("dy", ".75em")
+    .attr("transform", "rotate(-90)")
+    .text("Migration (people/year)");
+
   //Add x axis
   barchart_svg.append("g").call(d3.axisBottom(barchart_xScale).tickSize(0))
     .attr("transform", "translate(" + axesSpace.left + "," + (barchart_posHeight + axesSpace.top) + ")")
     .selectAll("text").attr("transform", "translate(" + -1 * (barchart_barWidth / 4) + ", " + (barchart_negHeight + 20) + ") rotate(-45)");
-
 
   //Linechart
   var linechart_datasetYears = [2015, 2016, 2017, 2018, 2019];
@@ -270,36 +291,36 @@ function gen_vis() {
   linechart_svg.append("g").call(d3.axisBottom(linechart_xScale).ticks(linechart_datasetYears.length).tickFormat(d3.format("d")))
     .attr("transform", "translate(" + axesSpace.left + "," + (chartHeight + axesSpace.top) + ")");
 
+  //adds x-axis label
+  linechart_svg.append("text")
+    .attr("transform",
+      "translate(" + ((idiomWidth + axesSpace.right) / 2) + " ," +
+      (idiomHeight) + ")")
+    .style("text-anchor", "middle")
+    .text("Year");
+
   linechart_svg.append("g").call(d3.axisLeft(linechart_yScale))
     .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
+  //adds y-axis label
+  linechart_svg.append("text")
+    .attr("class", "y label")
+    .attr("text-anchor", "end")
+    .attr("y", -0.5)
+    .attr("x", 0 - ((chartHeight + axesSpace.bottom) / 2))
+    .attr("dy", ".75em")
+    .attr("transform", "rotate(-90)")
+    .text("Price (£/night)");
+
 
   linechart_svg.append("path").datum(linechart_dataset)
     .attr("class", "line").attr("d", linechart_line)
     .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
-
   linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]]).enter().append("circle").attr("class", "dot")
     .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 6)
-    .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
-  /*
-  // testing tooltip
-  var tooltip = d3.select("#line-chart")
-    .append("div")
-    .style("position", "absolute")
-    .style("visibility", "hidden")
-    .style("background-color", "white")
-    .style("border", "solid")
-    .style("border-width", "1px")
-    .style("border-radius", "5px")
-    .style("padding", "10px")
-    .html("<p>I'm a tooltip written in HTML</p><img src='https://github.com/holtzy/D3-graph-gallery/blob/master/img/section/ArcSmal.png?raw=true'></img><br>Fancy<br><span style='font-size: 40px;'>Isn't it?</span>");
-
-
-  //
-  d3.select("#line-chart")
-    .on("mouseover", function () { return tooltip.style("visibility", "visible"); })
-    .on("mousemove", function () { return tooltip.style("top", (event.pageY - 400) + "px").style("left", (event.pageX - 600) + "px"); })
-    .on("mouseout", function () { return tooltip.style("visibility", "hidden"); });
-  */
+    .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")")
+    //shows on hover value but needs to update as well
+    .append("svg:title")
+    .text("£/night: " + (linechart_dataset[curYear - linechart_datasetYears[0]]));
 
   //Interactivity
   d3.select("#year-slider").on("input", function () {
@@ -367,6 +388,7 @@ function gen_vis() {
       .attr("class", "dot")
       .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]]))
       .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
+
 
     //Update lines
     radarchart_dataset = [];
