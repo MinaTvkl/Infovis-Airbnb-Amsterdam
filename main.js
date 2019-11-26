@@ -4,7 +4,7 @@ var barchart_datasetValues = {};
 var linechart_datasetValues = {};
 var radarchart_datasetValues = {};
 var map_datasetMap = {};
-var map_datasetListings = {};
+// var map_datasetListings = {};
 
 var curYear = 2019;
 var curDistrict = "Amsterdam";
@@ -12,6 +12,7 @@ var curDistrict = "Amsterdam";
 var idiomWidth = 500;
 var idiomHeight = 300;
 var transitionSpeed = 400;
+var tooltip = d3.select("#tooltip");
 
 var axesSpace = {
   top: 20,
@@ -32,8 +33,8 @@ Promise.all([
   d3.json("/data/bar_chart/migration.json"),
   d3.json("/data/line_chart/avg_prices_district.json"),
   d3.json("/data/radar_chart/indicators.json"),
-  d3.json("/data/map/GEBIED_STADSDELEN_EXWATER.json"),
-  d3.json("/data/map/csvjson.json")
+  d3.json("/data/map/GEBIED_STADSDELEN.json"),
+  // d3.json("/data/map/csvjson.json")
 ]).then(function(data) {
   //Reading in barchart data
   barchart_datasetValues = {
@@ -54,18 +55,17 @@ Promise.all([
 
   map_datasetMap = data[3];
 
-  map_datasetListings = data[4];
+  // map_datasetListings = data[4];
 
   //Calling render function
   gen_vis();
 });
 
 function gen_vis() {
-  var tooltip = d3.select("#tooltip");
 
-  function processPosition(string, position) {
-    return parseFloat(string.substring(0, position) + "." + string.substring(position));
-  }
+  // function processPosition(string, position) {
+  //   return parseFloat(string.substring(0, position) + "." + string.substring(position));
+  // }
 
   var projection = d3.geoMercator().translate([idiomWidth / 2, idiomHeight / 2]).scale(60000).center([4.9, 52.366667]);
   var path = d3.geoPath().projection(projection);
@@ -74,30 +74,38 @@ function gen_vis() {
     .attr("width", idiomWidth)
     .attr("height", idiomHeight);
 
-  map_svg.selectAll("path")
-    .data(map_datasetMap.features)
-    .enter()
-    .append("path")
+  map_svg.selectAll("path").data(map_datasetMap.features).enter().append("path")
     .classed("highlighted", function(value) {
       if (curDistrict == "Amsterdam") return true;
       else if (curDistrict == value.properties.Stadsdeel) return true;
       else return false;
     })
     .classed("district", true)
-    .attr("d", path);
+    .attr("d", path)
+    .on("mouseover", function(value, index) {
+      tooltip.style("opacity", 1);
+      tooltip.html(value.properties.Stadsdeel + ": ").style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
+    })
+    .on("mousemove", function() {
+      tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+    });
 
-  map_svg.selectAll("circle")
-    .data(map_datasetListings)
-    .enter()
-    .append("circle")
-    .attr("class", "circles")
-    .attr("cx", function(d) {
-      return projection([processPosition(d.longitude.toString(), 1), processPosition(d.latitude.toString(), 2)])[0];
-    })
-    .attr("cy", function(d) {
-      return projection([processPosition(d.longitude.toString(), 1), processPosition(d.latitude.toString(), 2)])[1];
-    })
-    .attr("r", "0.2px");
+  //
+  // map_svg.selectAll("circle")
+  //   .data(map_datasetListings)
+  //   .enter()
+  //   .append("circle")
+  //   .attr("class", "circles")
+  //   .attr("cx", function(d) {
+  //     return projection([processPosition(d.longitude.toString(), 1), processPosition(d.latitude.toString(), 2)])[0];
+  //   })
+  //   .attr("cy", function(d) {
+  //     return projection([processPosition(d.longitude.toString(), 1), processPosition(d.latitude.toString(), 2)])[1];
+  //   })
+  //   .attr("r", "0.2px");
 
   function update_radarchart_dataset() {
     var radarchart_dataset = [];
@@ -166,7 +174,6 @@ function gen_vis() {
 
   //Create axis rings
   for (var i = 1; i <= radarchart_circleAmount; i++) {
-    console.log(fillArray(radarchart_max / radarchart_circleAmount * i, indicatorNames.length + 1));
     radarchart_svg.append("path").datum(fillArray(radarchart_max / radarchart_circleAmount * i, indicatorNames.length + 1))
       .attr("d", radarchart_line)
       .attr("class", "helpaxis")
@@ -203,18 +210,18 @@ function gen_vis() {
     .attr("transform", "translate(" + idiomWidth / 2 + "," + idiomHeight / 2 + ")")
     //added exact values on hover but has to update on district/year change
     .on("mouseover", function(value) {
-      tooltip.transition().duration(transitionSpeed).style("opacity", 1);
+      tooltip.style("opacity", 1);
       tooltip.html("Criminality: " + radarchart_dataset[0] +
         "<br/>Nuisance: " + radarchart_dataset[1] +
-        "<br/>Persons avoidance: " + radarchart_dataset[1] +
-        "<br/>Persons inconvenience: " + radarchart_dataset[1] +
-        "<br/>Safety: " + radarchart_dataset[1]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY) + "px");
+        "<br/>Persons avoidance: " + radarchart_dataset[2] +
+        "<br/>Persons inconvenience: " + radarchart_dataset[3] +
+        "<br/>Safety: " + radarchart_dataset[4]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 124) + "px");
     })
     .on("mousemove", function() {
-      tooltip.style("top", (event.pageY - 20) + "px").style("left", (event.pageX + 10) + "px");
+      tooltip.style("top", (event.pageY - 124) + "px").style("left", (event.pageX ) + "px");
     })
     .on("mouseout", function() {
-      tooltip.transition().duration(transitionSpeed).style("opacity", 0);
+      tooltip.style("opacity", 0);
     });
 
 
@@ -252,11 +259,17 @@ function gen_vis() {
     .classed("highlighted", function(value, index) {
       return (districtNames[index] == curDistrict);
     })
-    //shows on hover y value but needs to be changed with update of year
-    .append("svg:title")
-    .text(function(value) {
-      return "People/year: " + value;
+    .on("mouseover", function(value, index) {
+      tooltip.style("opacity", 1);
+      tooltip.html("People/year: " + barchart_dataset[index]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY -40) + "px");
+    })
+    .on("mousemove", function() {
+      tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
     });
+
 
   //Add y axis
   barchart_svg.append("g").attr("transform", function(d) {
@@ -265,7 +278,7 @@ function gen_vis() {
 
   //adds y-axis label
   barchart_svg.append("text")
-    .attr("class", "y label")
+    .attr("class", "label")
     .attr("text-anchor", "end")
     .attr("y", -1)
     .attr("x", 0 - ((chartHeight + axesSpace.bottom) / 2))
@@ -302,6 +315,7 @@ function gen_vis() {
 
   //adds x-axis label
   linechart_svg.append("text")
+    .classed("label", true)
     .attr("transform",
       "translate(" + ((idiomWidth + axesSpace.right) / 2) + " ," +
       (idiomHeight) + ")")
@@ -318,7 +332,7 @@ function gen_vis() {
     .attr("x", 0 - ((chartHeight + axesSpace.bottom) / 2))
     .attr("dy", ".75em")
     .attr("transform", "rotate(-90)")
-    .text("Price (£/night)");
+    .text("Price (€/night)");
 
 
   linechart_svg.append("path").datum(linechart_dataset)
@@ -327,9 +341,16 @@ function gen_vis() {
   linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]]).enter().append("circle").attr("class", "dot")
     .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 6)
     .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")")
-    //shows on hover value but needs to update as well
-    .append("svg:title")
-    .text("£/night: " + (linechart_dataset[curYear - linechart_datasetYears[0]]));
+    .on("mouseover", function(value, index) {
+      tooltip.style("opacity", 1);
+      tooltip.html("€/night: " + linechart_dataset[index]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
+    })
+    .on("mousemove", function() {
+      tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+    });
 
   //Interactivity
   d3.select("#year-slider").on("input", function() {
@@ -387,8 +408,6 @@ function gen_vis() {
     linechart_dataset = linechart_datasetValues[curDistrict];
     //Update lines
     const linechart_lines = linechart_svg.selectAll(".line").datum(linechart_dataset).attr("class", "line");
-    linechart_lines.exit().remove();
-    linechart_lines.enter().append("path").attr("class", "line").attr("d", linechart_line);
     linechart_lines.transition().duration(transitionSpeed).attr("d", linechart_line);
 
     //Update dots
