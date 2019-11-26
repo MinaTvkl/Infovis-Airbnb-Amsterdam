@@ -4,7 +4,7 @@ var barchart_datasetValues = {};
 var linechart_datasetValues = {};
 var radarchart_datasetValues = {};
 var map_datasetMap = {};
-// var map_datasetListings = {};
+var map_datasetListings = {};
 
 var curYear = 2019;
 var curDistrict = "Amsterdam";
@@ -34,7 +34,7 @@ Promise.all([
   d3.json("/data/line_chart/avg_prices_district.json"),
   d3.json("/data/radar_chart/indicators.json"),
   d3.json("/data/map/GEBIED_STADSDELEN.json"),
-  // d3.json("/data/map/csvjson.json")
+  d3.json("/data/map/test.json")
 ]).then(function(data) {
   //Reading in barchart data
   barchart_datasetValues = {
@@ -55,7 +55,7 @@ Promise.all([
 
   map_datasetMap = data[3];
 
-  // map_datasetListings = data[4];
+  map_datasetListings = data[4];
 
   //Calling render function
   gen_vis();
@@ -70,6 +70,13 @@ function gen_vis() {
   var projection = d3.geoMercator().translate([idiomWidth / 2, idiomHeight / 2]).scale(60000).center([4.9, 52.366667]);
   var path = d3.geoPath().projection(projection);
 
+  var map_max = 2000;
+  var map_min = 0;
+
+  var map_sequentialScale = d3.scaleSequential()
+    .domain([map_min, map_max])
+    .interpolator(d3.interpolateGreens);
+
   let map_svg = d3.select("#map").append("svg")
     .attr("width", idiomWidth)
     .attr("height", idiomHeight);
@@ -83,14 +90,18 @@ function gen_vis() {
     .classed("district", true)
     .attr("d", path)
     .on("mouseover", function(value, index) {
-      tooltip.style("opacity", 1);
-      tooltip.html(value.properties.Stadsdeel + ": ").style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
+      tooltip.style("display", "block");
+      tooltip.html(value.properties.Stadsdeel + ": " + map_datasetListings[curYear -1][value.properties.Stadsdeel]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
     })
     .on("mousemove", function() {
       tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");
     })
     .on("mouseout", function() {
-      tooltip.style("opacity", 0);
+      tooltip.style("display", "none");
+    })
+    .style("fill", function(value) {
+      // return "green";
+      return map_sequentialScale(map_datasetListings[curYear -1][value.properties.Stadsdeel]);
     });
 
   //
@@ -218,7 +229,7 @@ function gen_vis() {
         "<br/>Safety: " + radarchart_dataset[4]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 124) + "px");
     })
     .on("mousemove", function() {
-      tooltip.style("top", (event.pageY - 124) + "px").style("left", (event.pageX ) + "px");
+      tooltip.style("top", (event.pageY - 124) + "px").style("left", (event.pageX) + "px");
     })
     .on("mouseout", function() {
       tooltip.style("opacity", 0);
@@ -261,7 +272,7 @@ function gen_vis() {
     })
     .on("mouseover", function(value, index) {
       tooltip.style("opacity", 1);
-      tooltip.html("People/year: " + barchart_dataset[index]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY -40) + "px");
+      tooltip.html("People/year: " + barchart_dataset[index]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
     })
     .on("mousemove", function() {
       tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");

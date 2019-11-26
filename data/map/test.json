@@ -1,0 +1,52 @@
+{
+  "2014": {
+    "Amsterdam": 336,
+    "Centrum": 1565,
+    "West": 573,
+    "Nieuw-West": 673,
+    "Zuid": 117,
+    "Oost": 537,
+    "Noord": 1213,
+    "Zuidoost": 168
+  },
+  "2015": {
+    "Amsterdam": 0,
+    "Centrum": 2414,
+    "West": 653,
+    "Nieuw-West": 553,
+    "Zuid": 380,
+    "Oost": 1674,
+    "Noord": 1147,
+    "Zuidoost": 73
+  },
+  "2016": {
+    "Amsterdam": 67,
+    "Centrum": 1831,
+    "West": 1187,
+    "Nieuw-West": 664,
+    "Zuid": 620,
+    "Oost": 1291,
+    "Noord": 1518,
+    "Zuidoost": 98
+  },
+  "2017": {
+    "Amsterdam": 109,
+    "Centrum": 2081,
+    "West": 997,
+    "Nieuw-West": 1596,
+    "Zuid": 495,
+    "Oost": 813,
+    "Noord": 1535,
+    "Zuidoost": 470
+  },
+  "2018": {
+    "Amsterdam": 11,
+    "Centrum": 2099,
+    "West": 101,
+    "Nieuw-West": 523,
+    "Zuid": 952,
+    "Oost": 1299,
+    "Noord": 1409,
+    "Zuidoost": 292
+  }
+}
