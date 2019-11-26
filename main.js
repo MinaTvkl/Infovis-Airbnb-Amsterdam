@@ -221,7 +221,7 @@ function gen_vis() {
     .attr("transform", "translate(" + idiomWidth / 2 + "," + idiomHeight / 2 + ")")
     //added exact values on hover but has to update on district/year change
     .on("mouseover", function(value) {
-      tooltip.style("opacity", 1);
+      tooltip.style("display", "block");
       tooltip.html("Criminality: " + radarchart_dataset[0] +
         "<br/>Nuisance: " + radarchart_dataset[1] +
         "<br/>Persons avoidance: " + radarchart_dataset[2] +
@@ -232,7 +232,7 @@ function gen_vis() {
       tooltip.style("top", (event.pageY - 124) + "px").style("left", (event.pageX) + "px");
     })
     .on("mouseout", function() {
-      tooltip.style("opacity", 0);
+      tooltip.style("display", "none");
     });
 
 
@@ -271,14 +271,14 @@ function gen_vis() {
       return (districtNames[index] == curDistrict);
     })
     .on("mouseover", function(value, index) {
-      tooltip.style("opacity", 1);
+      tooltip.style("display", "block");
       tooltip.html("People/year: " + barchart_dataset[index]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
     })
     .on("mousemove", function() {
       tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");
     })
     .on("mouseout", function() {
-      tooltip.style("opacity", 0);
+      tooltip.style("display", "none");
     });
 
 
@@ -353,14 +353,14 @@ function gen_vis() {
     .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 6)
     .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")")
     .on("mouseover", function(value, index) {
-      tooltip.style("opacity", 1);
+      tooltip.style("display", "block");
       tooltip.html("€/night: " + linechart_dataset[index]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
     })
     .on("mousemove", function() {
       tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");
     })
     .on("mouseout", function() {
-      tooltip.style("opacity", 0);
+      tooltip.style("display", "none");
     });
 
   //Interactivity
