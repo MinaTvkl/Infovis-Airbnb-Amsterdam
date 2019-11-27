@@ -1,6 +1,6 @@
 var districtNames = ["Amsterdam", "Centrum", "West", "Nieuw-West", "Zuid", "Oost", "Noord", "Zuidoost"];
 var indicatorNames = ["Criminality", "Nuisance", "Persons_avoidance", "Persons_inconvenience", "Safety"];
-var barchart_datasetValues = {};
+var bData = {};
 var linechart_datasetValues = {};
 var radarchart_datasetValues = {};
 var map_datasetMap = {};
@@ -13,6 +13,18 @@ var idiomWidth = 500;
 var idiomHeight = 300;
 var transitionSpeed = 400;
 var tooltip = d3.select("#tooltip");
+
+Array.prototype.first = function() {
+  return this[0];
+}
+
+Array.prototype.last = function() {
+  return this[this.length - 1];
+}
+
+function translate(x, y) {
+  return "translate(" + x + "," + y + ")";
+}
 
 var axesSpace = {
   top: 20,
@@ -29,6 +41,9 @@ var radarSpace = {
 var chartWidth = idiomWidth - axesSpace.left - axesSpace.right;
 var chartHeight = idiomHeight - axesSpace.top - axesSpace.bottom;
 
+let graphWidth = idiomWidth - axesSpace.left - axesSpace.right;
+let graphHeight = idiomHeight - axesSpace.top - axesSpace.bottom;
+
 Promise.all([
   d3.json("/data/bar_chart/migration.json"),
   d3.json("/data/line_chart/avg_prices_district.json"),
@@ -37,13 +52,7 @@ Promise.all([
   d3.json("/data/map/test.json")
 ]).then(function(data) {
   //Reading in barchart data
-  barchart_datasetValues = {
-    2014: Object.values(data[0].year2014),
-    2015: Object.values(data[0].year2015),
-    2016: Object.values(data[0].year2016),
-    2017: Object.values(data[0].year2017),
-    2018: Object.values(data[0].year2018)
-  };
+  bData = data[0];
 
   //Reading in linechart data
   for (var i = 0; i < Object.keys(data[1]).length; i++) {
@@ -107,20 +116,6 @@ function gen_vis() {
       d3.select("#selector").node().value = value.properties.Stadsdeel;
       d3.select("#selector").node().dispatchEvent(new Event('input'));
     });
-
-  //
-  // map_svg.selectAll("circle")
-  //   .data(map_datasetListings)
-  //   .enter()
-  //   .append("circle")
-  //   .attr("class", "circles")
-  //   .attr("cx", function(d) {
-  //     return projection([processPosition(d.longitude.toString(), 1), processPosition(d.latitude.toString(), 2)])[0];
-  //   })
-  //   .attr("cy", function(d) {
-  //     return projection([processPosition(d.longitude.toString(), 1), processPosition(d.latitude.toString(), 2)])[1];
-  //   })
-  //   .attr("r", "0.2px");
 
   function update_radarchart_dataset() {
     var radarchart_dataset = [];
@@ -239,72 +234,125 @@ function gen_vis() {
       tooltip.style("display", "none");
     });
 
-
-  //Barchart
-  var barchart_datasetYears = [2014, 2015, 2016, 2017, 2018];
-  var barchart_dataset = barchart_datasetValues[curYear - 1];
-
-  var barchart_min = getMin(barchart_datasetValues);
-  var barchart_max = getMax(barchart_datasetValues);
-
-  var barchart_barWidth = Math.abs(chartWidth / barchart_datasetValues[2014].length);
-  var barchart_posPercentage = barchart_max / (barchart_max + Math.abs(barchart_min));
-
-  var barchart_posHeight = barchart_posPercentage * chartHeight;
-  var barchart_negHeight = chartHeight - barchart_posHeight;
-
-  var barchart_posYScale = d3.scaleLinear().domain([0, barchart_max]).range([0, barchart_posHeight]);
-  var barchart_yScale = d3.scaleLinear().domain([barchart_min, barchart_max]).range([chartHeight, 0]);
-  var barchart_xScale = d3.scaleBand().domain(districtNames).range([0, chartWidth]);
-
-  var barchart_svg = d3.select("#bar-chart")
+  let bSvg = d3.select("#bar-chart")
     .append("svg")
     .attr("height", idiomHeight)
     .attr("width", idiomWidth);
 
-  //Add data
-  barchart_svg.selectAll("rect").data(barchart_dataset).enter().append("rect").attr("class", "bar")
-    .attr("x", function(value, index) {
-      return axesSpace.left + index * barchart_barWidth;
-    }).attr("y", function(value) {
-      return axesSpace.top + barchart_posHeight - Math.max(0, barchart_posYScale(value));
-    }).attr("height", function(value) {
-      return Math.abs(barchart_posYScale(value));
-    }).attr("width", barchart_barWidth)
-    .classed("highlighted", function(value, index) {
-      return (districtNames[index] == curDistrict);
-    })
-    .on("mouseover", function(value, index) {
+  let bXDomain = [...new Set(bData.map(t => t.migration).map(t => t.map(u => u.district)).flat())];
+  let bYDomain = [...new Set(bData.map(t => t.migration).map(t => t.map(u => u.value)).flat().sort((a, b) => a - b))];
+
+  let bYMax = bYDomain.last();
+  let bYMin = bYDomain.first();
+
+  let bX = d3.scaleBand().domain(bXDomain).range([0, graphWidth]);
+  let bYPositive = d3.scaleLinear().domain([0, bYMax]).range([0, graphHeight * (bYMax / (Math.abs(bYMin) + bYMax))]);
+  let bY = d3.scaleLinear().domain([bYMax, bYMin]).range([0, graphHeight]);
+
+  let bXAxisPosition = bY(0);
+  let bBarWidth = graphWidth / bXDomain.length;
+
+  bSvg.selectAll("rect")
+    .append("g")
+    .data(bData.filter(t => curYear - 1 == t.year).first().migration)
+    .enter()
+    .append("rect")
+    .classed("bar", true)
+    .attr("x", d => bX(d.district))
+    .attr("y", d => Math.min(bY(0), bY(d.value)))
+    .attr("height", d => d.value < 0 ? bY(d.value) - bXAxisPosition : bYPositive(d.value))
+    .attr("width", bBarWidth)
+    .attr("transform", translate(axesSpace.left, axesSpace.top))
+    .classed("highlighted", d => d.district == curDistrict)
+    .on("mouseover", function(d) {
       tooltip.style("display", "block");
-      tooltip.html("People/year: " + barchart_dataset[index]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
+      tooltip.html(d.district + " people/year: " + d.value).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
     })
-    .on("mousemove", function() {
-      tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");
-    })
-    .on("mouseout", function() {
-      tooltip.style("display", "none");
-    });
+    .on("mousemove", () => tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px"))
+    .on("mouseout", () => tooltip.style("display", "none"))
+    .on("click", function(d) {
+      d3.select("#selector").node().value = d.district;
+      d3.select("#selector").node().dispatchEvent(new Event('input'));
+    });;
 
+  bSvg.append("g")
+    .call(d3.axisLeft(bY))
+    .attr("transform", translate(axesSpace.left, axesSpace.top));
 
-  //Add y axis
-  barchart_svg.append("g").attr("transform", function(d) {
-    return "translate(" + (axesSpace.left) + ", " + (axesSpace.top) + ")";
-  }).call(d3.axisLeft(barchart_yScale));
+  bSvg.append("g")
+    .call(d3.axisBottom(bX).tickSize(0))
+    .attr("transform", translate(axesSpace.left, axesSpace.top + bXAxisPosition))
+    .selectAll("text")
+    .attr("transform", translate(-10, bY(bYMin) - bXAxisPosition + 20) + "rotate(-45)");
 
-  //adds y-axis label
-  barchart_svg.append("text")
-    .attr("class", "label")
-    .attr("text-anchor", "end")
-    .attr("y", -1)
-    .attr("x", 0 - ((chartHeight + axesSpace.bottom) / 2))
-    .attr("dy", ".75em")
-    .attr("transform", "rotate(-90)")
-    .text("Migration (people/year)");
+  // barchart_datasetValues
 
-  //Add x axis
-  barchart_svg.append("g").call(d3.axisBottom(barchart_xScale).tickSize(0))
-    .attr("transform", "translate(" + axesSpace.left + "," + (barchart_posHeight + axesSpace.top) + ")")
-    .selectAll("text").attr("transform", "translate(" + -1 * (barchart_barWidth / 4) + ", " + (barchart_negHeight + 20) + ") rotate(-45)");
+  //
+  // //Barchart
+  // var barchart_datasetYears = [2014, 2015, 2016, 2017, 2018];
+  // var barchart_dataset = barchart_datasetValues[curYear - 1];
+  //
+  // var barchart_min = getMin(barchart_datasetValues);
+  // var barchart_max = getMax(barchart_datasetValues);
+  //
+  // var barchart_barWidth = Math.abs(chartWidth / barchart_datasetValues[2014].length);
+  // var barchart_posPercentage = barchart_max / (barchart_max + Math.abs(barchart_min));
+  //
+  // var barchart_posHeight = barchart_posPercentage * chartHeight;
+  // var barchart_negHeight = chartHeight - barchart_posHeight;
+  //
+  // var barchart_posYScale = d3.scaleLinear().domain([0, barchart_max]).range([0, barchart_posHeight]);
+  // var barchart_yScale = d3.scaleLinear().domain([barchart_min, barchart_max]).range([chartHeight, 0]);
+  // var barchart_xScale = d3.scaleBand().domain(districtNames).range([0, chartWidth]);
+  //
+  // var barchart_svg = d3.select("#bar-chart")
+  //   .append("svg")
+  //   .attr("height", idiomHeight)
+  //   .attr("width", idiomWidth);
+  //
+  // //Add data
+  // barchart_svg.selectAll("rect").data(barchart_dataset).enter().append("rect").attr("class", "bar")
+  //   .attr("x", function(value, index) {
+  //     return axesSpace.left + index * barchart_barWidth;
+  //   }).attr("y", function(value) {
+  //     return axesSpace.top + barchart_posHeight - Math.max(0, barchart_posYScale(value));
+  //   }).attr("height", function(value) {
+  //     return Math.abs(barchart_posYScale(value));
+  //   }).attr("width", barchart_barWidth)
+  //   .classed("highlighted", function(value, index) {
+  //     return (districtNames[index] == curDistrict);
+  //   })
+  //   .on("mouseover", function(value, index) {
+  //     tooltip.style("display", "block");
+  //     tooltip.html("People/year: " + barchart_dataset[index]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
+  //   })
+  //   .on("mousemove", function() {
+  //     tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");
+  //   })
+  //   .on("mouseout", function() {
+  //     tooltip.style("display", "none");
+  //   });
+  //
+  //
+  // //Add y axis
+  // barchart_svg.append("g").attr("transform", function(d) {
+  //   return "translate(" + (axesSpace.left) + ", " + (axesSpace.top) + ")";
+  // }).call(d3.axisLeft(barchart_yScale));
+  //
+  // //adds y-axis label
+  // barchart_svg.append("text")
+  //   .attr("class", "label")
+  //   .attr("text-anchor", "end")
+  //   .attr("y", -1)
+  //   .attr("x", 0 - ((chartHeight + axesSpace.bottom) / 2))
+  //   .attr("dy", ".75em")
+  //   .attr("transform", "rotate(-90)")
+  //   .text("Migration (people/year)");
+  //
+  // //Add x axis
+  // barchart_svg.append("g").call(d3.axisBottom(barchart_xScale).tickSize(0))
+  //   .attr("transform", "translate(" + axesSpace.left + "," + (barchart_posHeight + axesSpace.top) + ")")
+  //   .selectAll("text").attr("transform", "translate(" + -1 * (barchart_barWidth / 4) + ", " + (barchart_negHeight + 20) + ") rotate(-45)");
 
   //Linechart
   var linechart_datasetYears = [2015, 2016, 2017, 2018, 2019];
@@ -376,16 +424,13 @@ function gen_vis() {
       return map_sequentialScale(map_datasetListings[curYear - 1][value.properties.Stadsdeel]);
     });
 
-    barchart_dataset = barchart_datasetValues[curYear - 1];
-    barchart_svg.selectAll("rect").data(barchart_dataset)
+    bSvg.selectAll("rect")
+      .data(bData.filter(t => curYear - 1 == t.year).first().migration)
       .transition().duration(transitionSpeed)
-      .attr("x", function(value, index) {
-        return axesSpace.left + index * barchart_barWidth;
-      }).attr("y", function(value) {
-        return axesSpace.top + barchart_posHeight - Math.max(0, barchart_posYScale(value));
-      }).attr("height", function(value) {
-        return Math.abs(barchart_posYScale(value));
-      }).attr("width", barchart_barWidth);
+      .attr("x", d => bX(d.district))
+      .attr("y", d => Math.min(bY(0), bY(d.value)))
+      .attr("height", d => d.value < 0 ? bY(d.value) - bXAxisPosition : bYPositive(d.value))
+      .attr("width", bBarWidth);
 
     linechart_dataset = linechart_datasetValues[curDistrict];
     linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]])
@@ -410,9 +455,12 @@ function gen_vis() {
   d3.select("#selector").on("input", function() {
     curDistrict = d3.select("#selector").node().value;
 
-    barchart_svg.selectAll(".bar").classed("highlighted", function(value, index) {
-      return (districtNames[index] == curDistrict);
-    });
+    bSvg.selectAll(".bar")
+      .classed("highlighted", d => d.district == curDistrict);
+
+    // barchart_svg.selectAll(".bar").classed("highlighted", function(value, index) {
+    //   return (districtNames[index] == curDistrict);
+    // });
 
     map_svg.selectAll("path")
       .classed("highlighted", function(value) {
