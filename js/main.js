@@ -82,13 +82,13 @@ function gen_vis() {
   var map_max = 2000;
   var map_min = 0;
 
-  var map_sequentialScale = d3.scaleSequential()
-    .domain([map_min, map_max])
-    .interpolator(d3.interpolateGreens);
-
   let map_svg = d3.select("#map").append("svg")
     .attr("width", idiomWidth)
     .attr("height", idiomHeight);
+
+  var map_sequentialScale = d3.scaleSequential()
+    .domain([map_min, map_max])
+    .interpolator(d3.interpolateGreens);
 
   map_svg.selectAll("path").data(map_datasetMap.features).enter().append("path")
     .classed("highlighted", d => curDistrict == "Amsterdam" || curDistrict == d.properties.Stadsdeel ? true : false)
@@ -194,7 +194,7 @@ function gen_vis() {
 
     //Draw axis line
     if (i != 0) {
-      radarchart_svg.append("line").attr("class", "axis")
+      radarchart_svg.append("line").attr("class", "axis ticks")
         .attr("x1", idiomWidth / 2).attr("y1", idiomHeight / 2)
         .attr("x2", idiomWidth / 2 + line_coordinate.x).attr("y2", idiomHeight / 2 + line_coordinate.y);
     }
