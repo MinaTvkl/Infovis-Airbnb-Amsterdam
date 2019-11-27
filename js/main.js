@@ -273,17 +273,23 @@ function gen_vis() {
     .on("click", function(d) {
       d3.select("#selector").node().value = d.district;
       d3.select("#selector").node().dispatchEvent(new Event('input'));
-    });;
+    });
 
   bSvg.append("g")
     .call(d3.axisLeft(bY))
+    .classed("axis", true)
     .attr("transform", translate(axesSpace.left, axesSpace.top));
 
   bSvg.append("g")
     .call(d3.axisBottom(bX).tickSize(0))
     .attr("transform", translate(axesSpace.left, axesSpace.top + bXAxisPosition))
+    .classed("axis values clickable", true)
     .selectAll("text")
-    .attr("transform", translate(-10, bY(bYMin) - bXAxisPosition + 20) + "rotate(-45)");
+    .attr("transform", translate(-10, bY(bYMin) - bXAxisPosition + 20) + "rotate(-45)")
+    .on("click", function(d) {
+      d3.select("#selector").node().value = d;
+      d3.select("#selector").node().dispatchEvent(new Event('input'));
+    });
 
   // barchart_datasetValues
 

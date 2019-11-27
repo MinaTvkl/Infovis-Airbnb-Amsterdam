@@ -12,11 +12,15 @@
   fill: none;
 }
 
-.axis {
+.axis.ticks {
   stroke-width: 1;
   stroke: var(--dark);
   stroke-opacity: 1;
   fill: none;
+}
+
+.clickable {
+  cursor: pointer;
 }
 
 .label {
