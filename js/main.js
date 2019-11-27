@@ -91,31 +91,21 @@ function gen_vis() {
     .attr("height", idiomHeight);
 
   map_svg.selectAll("path").data(map_datasetMap.features).enter().append("path")
-    .classed("highlighted", function(value) {
-      if (curDistrict == "Amsterdam") return true;
-      else if (curDistrict == value.properties.Stadsdeel) return true;
-      else return false;
-    })
+    .classed("highlighted", d => curDistrict == "Amsterdam" || curDistrict == d.properties.Stadsdeel ? true : false)
     .classed("district", true)
     .attr("d", path)
     .on("mouseover", function(value, index) {
       tooltip.style("display", "block");
       tooltip.html(value.properties.Stadsdeel + ": " + map_datasetListings[curYear - 1][value.properties.Stadsdeel]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
     })
-    .on("mousemove", function() {
-      tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");
-    })
-    .on("mouseout", function() {
-      tooltip.style("display", "none");
-    })
-    .style("fill", function(value) {
-      // return "green";
-      return map_sequentialScale(map_datasetListings[curYear - 1][value.properties.Stadsdeel]);
-    })
+    .on("mousemove", () => tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px"))
+    .on("mouseout", () => tooltip.style("display", "none"))
+    .style("fill", d => map_sequentialScale(map_datasetListings[curYear - 1][d.properties.Stadsdeel]))
     .on("click", function(value) {
       d3.select("#selector").node().value = value.properties.Stadsdeel;
       d3.select("#selector").node().dispatchEvent(new Event('input'));
-    });
+    })
+    .classed("clickable", true);
 
   function update_radarchart_dataset() {
     var radarchart_dataset = [];
@@ -273,7 +263,8 @@ function gen_vis() {
     .on("click", function(d) {
       d3.select("#selector").node().value = d.district;
       d3.select("#selector").node().dispatchEvent(new Event('input'));
-    });
+    })
+    .classed("clickable", true);
 
   bSvg.append("g")
     .call(d3.axisLeft(bY))
@@ -290,75 +281,6 @@ function gen_vis() {
       d3.select("#selector").node().value = d;
       d3.select("#selector").node().dispatchEvent(new Event('input'));
     });
-
-  // barchart_datasetValues
-
-  //
-  // //Barchart
-  // var barchart_datasetYears = [2014, 2015, 2016, 2017, 2018];
-  // var barchart_dataset = barchart_datasetValues[curYear - 1];
-  //
-  // var barchart_min = getMin(barchart_datasetValues);
-  // var barchart_max = getMax(barchart_datasetValues);
-  //
-  // var barchart_barWidth = Math.abs(chartWidth / barchart_datasetValues[2014].length);
-  // var barchart_posPercentage = barchart_max / (barchart_max + Math.abs(barchart_min));
-  //
-  // var barchart_posHeight = barchart_posPercentage * chartHeight;
-  // var barchart_negHeight = chartHeight - barchart_posHeight;
-  //
-  // var barchart_posYScale = d3.scaleLinear().domain([0, barchart_max]).range([0, barchart_posHeight]);
-  // var barchart_yScale = d3.scaleLinear().domain([barchart_min, barchart_max]).range([chartHeight, 0]);
-  // var barchart_xScale = d3.scaleBand().domain(districtNames).range([0, chartWidth]);
-  //
-  // var barchart_svg = d3.select("#bar-chart")
-  //   .append("svg")
-  //   .attr("height", idiomHeight)
-  //   .attr("width", idiomWidth);
-  //
-  // //Add data
-  // barchart_svg.selectAll("rect").data(barchart_dataset).enter().append("rect").attr("class", "bar")
-  //   .attr("x", function(value, index) {
-  //     return axesSpace.left + index * barchart_barWidth;
-  //   }).attr("y", function(value) {
-  //     return axesSpace.top + barchart_posHeight - Math.max(0, barchart_posYScale(value));
-  //   }).attr("height", function(value) {
-  //     return Math.abs(barchart_posYScale(value));
-  //   }).attr("width", barchart_barWidth)
-  //   .classed("highlighted", function(value, index) {
-  //     return (districtNames[index] == curDistrict);
-  //   })
-  //   .on("mouseover", function(value, index) {
-  //     tooltip.style("display", "block");
-  //     tooltip.html("People/year: " + barchart_dataset[index]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
-  //   })
-  //   .on("mousemove", function() {
-  //     tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");
-  //   })
-  //   .on("mouseout", function() {
-  //     tooltip.style("display", "none");
-  //   });
-  //
-  //
-  // //Add y axis
-  // barchart_svg.append("g").attr("transform", function(d) {
-  //   return "translate(" + (axesSpace.left) + ", " + (axesSpace.top) + ")";
-  // }).call(d3.axisLeft(barchart_yScale));
-  //
-  // //adds y-axis label
-  // barchart_svg.append("text")
-  //   .attr("class", "label")
-  //   .attr("text-anchor", "end")
-  //   .attr("y", -1)
-  //   .attr("x", 0 - ((chartHeight + axesSpace.bottom) / 2))
-  //   .attr("dy", ".75em")
-  //   .attr("transform", "rotate(-90)")
-  //   .text("Migration (people/year)");
-  //
-  // //Add x axis
-  // barchart_svg.append("g").call(d3.axisBottom(barchart_xScale).tickSize(0))
-  //   .attr("transform", "translate(" + axesSpace.left + "," + (barchart_posHeight + axesSpace.top) + ")")
-  //   .selectAll("text").attr("transform", "translate(" + -1 * (barchart_barWidth / 4) + ", " + (barchart_negHeight + 20) + ") rotate(-45)");
 
   //Linechart
   var linechart_datasetYears = [2015, 2016, 2017, 2018, 2019];
@@ -469,12 +391,7 @@ function gen_vis() {
     // });
 
     map_svg.selectAll("path")
-      .classed("highlighted", function(value) {
-        if (curDistrict == "Amsterdam") return true;
-        else if (curDistrict == value.properties.Stadsdeel) return true;
-        else return false;
-      })
-      .classed("district", true)
+      .classed("highlighted", d => curDistrict == "Amsterdam" || curDistrict == d.properties.Stadsdeel ? true : false)
       .attr("d", path);
 
 

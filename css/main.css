@@ -47,9 +47,6 @@
 
 .district {
   fill: none;
-  stroke-width: 1;
-  stroke: var(--white);
-  stroke-opacity: 1;
   opacity: 0.2;
 }
 
