@@ -1,6 +1,7 @@
 var districtNames = ["Amsterdam", "Centrum", "West", "Nieuw-West", "Zuid", "Oost", "Noord", "Zuidoost"];
 var indicatorNames = ["Criminality", "Nuisance", "Persons_avoidance", "Persons_inconvenience", "Safety"];
 var bData = {};
+var lData = {};
 var linechart_datasetValues = {};
 var radarchart_datasetValues = {};
 var map_datasetMap = {};
@@ -46,7 +47,7 @@ let graphHeight = idiomHeight - axesSpace.top - axesSpace.bottom;
 
 Promise.all([
   d3.json("/data/bar_chart/migration.json"),
-  d3.json("/data/line_chart/avg_prices_district.json"),
+  d3.json("/data/line_chart/prices.json"),
   d3.json("/data/radar_chart/indicators.json"),
   d3.json("/data/map/GEBIED_STADSDELEN.json"),
   d3.json("/data/map/test.json")
@@ -54,10 +55,7 @@ Promise.all([
   //Reading in barchart data
   bData = data[0];
 
-  //Reading in linechart data
-  for (var i = 0; i < Object.keys(data[1]).length; i++) {
-    linechart_datasetValues[Object.keys(data[1])[i]] = Object.values(data[1][Object.keys(data[1])[i]]);
-  }
+  lData = data[1];
 
   //Reading in the radarchart data
   radarchart_datasetValues = data[2];
@@ -223,6 +221,7 @@ function gen_vis() {
     .on("mouseout", function() {
       tooltip.style("display", "none");
     });
+    
 
   let bSvg = d3.select("#bar-chart")
     .append("svg")
@@ -282,73 +281,65 @@ function gen_vis() {
       d3.select("#selector").node().dispatchEvent(new Event('input'));
     });
 
-  //Linechart
-  var linechart_datasetYears = [2015, 2016, 2017, 2018, 2019];
-  var linechart_dataset = linechart_datasetValues[curDistrict];
 
-  var linechart_min = 0; //getMin(linechart_datasetValues);
-  var linechart_max = getMax(linechart_datasetValues);
+  let lSvg = d3.select("#line-chart").append("svg")
+    .attr("height", idiomHeight)
+    .attr("width", idiomWidth);
 
-  var linechart_xScale = d3.scaleLinear().domain([linechart_datasetYears[0], linechart_datasetYears[linechart_datasetYears.length - 1]]).range([0, chartWidth]);
-  var linechart_yScale = d3.scaleLinear().domain([linechart_min, linechart_max]).range([chartHeight, 0]);
+  let lXDomain = [...new Set(lData.map(t => t.prices).map(t => t.map(u => u.year)).flat().sort((a, b) => a - b))];
+  let lYDomain = [...new Set(lData.map(t => t.prices).map(t => t.map(u => u.value)).flat().sort((a, b) => a - b))];
 
-  var linechart_line = d3.line().x(function(value, index) {
-    return linechart_xScale(index + linechart_datasetYears[0]);
-  }).y(function(value) {
-    return linechart_yScale(value);
-  });
+  let lYMax = lYDomain.last();
+  let lYMin = lYDomain.first();
 
-  var linechart_svg = d3.select("#line-chart").append("svg")
-    .attr("height", idiomHeight).attr("width", idiomWidth);
+  let lXMax = lXDomain.first();
+  let lXMin = lXDomain.last();
 
-  linechart_svg.append("g").call(d3.axisBottom(linechart_xScale).ticks(linechart_datasetYears.length).tickFormat(d3.format("d")))
-    .attr("transform", "translate(" + axesSpace.left + "," + (chartHeight + axesSpace.top) + ")");
+  let lX = d3.scaleLinear().domain([lXMin, lXMax]).range([graphWidth, 0]);
+  let lY = d3.scaleLinear().domain([lYMin, lYMax]).range([graphHeight, 0]);
 
-  //adds x-axis label
-  linechart_svg.append("text")
-    .classed("label", true)
-    .attr("transform",
-      "translate(" + ((idiomWidth + axesSpace.right) / 2) + " ," +
-      (idiomHeight) + ")")
-    .style("text-anchor", "middle")
-    .text("Year");
+  let lLine = d3.line()
+    .x(d => lX(d.year))
+    .y(d => lY(d.value));
 
-  linechart_svg.append("g").call(d3.axisLeft(linechart_yScale))
-    .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
-  //adds y-axis label
-  linechart_svg.append("text")
-    .attr("class", "y label")
-    .attr("text-anchor", "end")
-    .attr("y", -0.5)
-    .attr("x", 0 - ((chartHeight + axesSpace.bottom) / 2))
-    .attr("dy", ".75em")
-    .attr("transform", "rotate(-90)")
-    .text("Price (€/night)");
+  lSvg.append("path").datum(lData.filter(t => t.district == curDistrict).first().prices)
+    .attr("class", "line")
+    .attr("d", lLine)
+    .attr("transform", translate(axesSpace.left, axesSpace.top));
 
-
-  linechart_svg.append("path").datum(linechart_dataset)
-    .attr("class", "line").attr("d", linechart_line)
-    .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
-  linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]]).enter().append("circle").attr("class", "dot")
-    .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 6)
-    .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")")
-    .on("mouseover", function(value, index) {
-      tooltip.style("display", "block");
-      tooltip.html("€/night: " + linechart_dataset[index]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
-    })
-    .on("mousemove", function() {
-      tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px");
-    })
-    .on("mouseout", function() {
-      tooltip.style("display", "none");
+  lSvg.append("g").call(d3.axisBottom(lX)
+      .ticks(lXDomain.length)
+      .tickFormat(d3.format("d")))
+    .attr("transform", translate(axesSpace.left, axesSpace.top + graphHeight))
+    .selectAll("text")
+    .classed("clickable", true)
+    .on("click", function(d) {
+      d3.select("#year-slider").node().value = d;
+      d3.select("#year-slider").node().dispatchEvent(new Event('input'));
     });
+
+  lSvg.append("g").call(d3.axisLeft(lY))
+    .attr("transform", translate(axesSpace.left, axesSpace.top));
+
+  lSvg.selectAll(".dot").data(lData.filter(t => t.district == curDistrict).first().prices.filter(t => t.year == curYear))
+    .enter().append("circle").attr("class", "dot")
+    .attr("cx", d => lX(d.year))
+    .attr("cy", d => lY(d.value))
+    .attr("r", 7)
+    .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")")
+    .on("mouseover", d => {
+      tooltip.style("display", "block");
+      tooltip.html("€/night: " + d.value).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
+    })
+    .on("mousemove", () => tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px"))
+    .on("mouseout", () => tooltip.style("display", "none"));
+
 
   //Interactivity
   d3.select("#year-slider").on("input", function() {
     curYear = document.getElementById("year-slider").value;
 
     map_svg.selectAll("path").style("fill", function(value) {
-      // return "green";
       return map_sequentialScale(map_datasetListings[curYear - 1][value.properties.Stadsdeel]);
     });
 
@@ -360,12 +351,12 @@ function gen_vis() {
       .attr("height", d => d.value < 0 ? bY(d.value) - bXAxisPosition : bYPositive(d.value))
       .attr("width", bBarWidth);
 
-    linechart_dataset = linechart_datasetValues[curDistrict];
-    linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]])
+    lSvg.selectAll(".dot")
+      .data(lData.filter(t => t.district == curDistrict).first().prices.filter(t => t.year == curYear))
       .transition().duration(transitionSpeed)
-      .attr("class", "dot")
-      .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]])).attr("r", 7)
-      .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
+      .attr("cx", d => lX(d.year))
+      .attr("cy", d => lY(d.value));
+
 
     //Update lines
     radarchart_dataset = [];
@@ -386,27 +377,19 @@ function gen_vis() {
     bSvg.selectAll(".bar")
       .classed("highlighted", d => d.district == curDistrict);
 
-    // barchart_svg.selectAll(".bar").classed("highlighted", function(value, index) {
-    //   return (districtNames[index] == curDistrict);
-    // });
-
     map_svg.selectAll("path")
       .classed("highlighted", d => curDistrict == "Amsterdam" || curDistrict == d.properties.Stadsdeel ? true : false)
       .attr("d", path);
 
+    lSvg.selectAll(".line")
+      .datum(lData.filter(t => t.district == curDistrict).first().prices)
+      .transition().duration(transitionSpeed).attr("d", lLine);
 
-    linechart_dataset = linechart_datasetValues[curDistrict];
-    //Update lines
-    const linechart_lines = linechart_svg.selectAll(".line").datum(linechart_dataset).attr("class", "line");
-    linechart_lines.transition().duration(transitionSpeed).attr("d", linechart_line);
-
-    //Update dots
-    linechart_svg.selectAll(".dot").data([linechart_dataset[curYear]])
+    lSvg.selectAll(".dot")
+      .data(lData.filter(t => t.district == curDistrict).first().prices.filter(t => t.year == curYear))
       .transition().duration(transitionSpeed)
-      .attr("class", "dot")
-      .attr("cx", linechart_xScale(curYear)).attr("cy", linechart_yScale(linechart_dataset[curYear - linechart_datasetYears[0]]))
-      .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")");
-
+      .attr("cx", d => lX(d.year))
+      .attr("cy", d => lY(d.value));
 
     //Update lines
     radarchart_dataset = [];
@@ -414,7 +397,6 @@ function gen_vis() {
       radarchart_dataset.push(radarchart_datasetValues[t][curDistrict][curYear - 1])
     );
     radarchart_dataset.push(radarchart_dataset[0]);
-    console.log(radarchart_dataset);
     const radarchart_lines = radarchart_svg.selectAll(".line").datum(radarchart_dataset);
     radarchart_lines.exit().remove();
     radarchart_lines.enter().append("path").attr("class", "line").attr("d", radarchart_line);
