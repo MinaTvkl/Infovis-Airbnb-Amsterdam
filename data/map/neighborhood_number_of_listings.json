@@ -4,7 +4,7 @@
     "Nieuw-West": 425,
     "Noord": 427,
     "Oost": 1686,
-    "Weest": 2360,
+    "West": 2360,
     "Westpoort": 927,
     "Zuid": 967,
     "Zuidoost": 1384
@@ -14,7 +14,7 @@
     "Nieuw-West": 684,
     "Noord": 631,
     "Oost": 2519,
-    "Weest": 3486,
+    "West": 3486,
     "Westpoort": 1126,
     "Zuid": 1273,
     "Zuidoost": 2069
@@ -24,7 +24,7 @@
     "Nieuw-West": 800,
     "Noord": 769,
     "Oost": 3194,
-    "Weest": 4341,
+    "West": 4341,
     "Westpoort": 1367,
     "Zuid": 1617,
     "Zuidoost": 2670
@@ -34,7 +34,7 @@
     "Nieuw-West": 906,
     "Noord": 891,
     "Oost": 3502,
-    "Weest": 4660,
+    "West": 4660,
     "Westpoort": 1490,
     "Zuid": 1703,
     "Zuidoost": 2822
@@ -44,7 +44,7 @@
     "Nieuw-West": 908,
     "Noord": 976,
     "Oost": 3664,
-    "Weest": 4630,
+    "West": 4630,
     "Westpoort": 1506,
     "Zuid": 1688,
     "Zuidoost": 2870
