@@ -62,3 +62,7 @@
   background-color: var(--gray);
   border-radius: 10px;
 }
+
+#map{
+  width: max-content;
+}

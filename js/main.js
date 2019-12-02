@@ -15,11 +15,11 @@ var idiomHeight = 300;
 var transitionSpeed = 400;
 var tooltip = d3.select("#tooltip");
 
-Array.prototype.first = function() {
+Array.prototype.first = function () {
   return this[0];
 }
 
-Array.prototype.last = function() {
+Array.prototype.last = function () {
   return this[this.length - 1];
 }
 
@@ -51,7 +51,7 @@ Promise.all([
   d3.json("/data/radar_chart/indicators.json"),
   d3.json("/data/map/GEBIED_STADSDELEN.json"),
   d3.json("/data/map/test.json")
-]).then(function(data) {
+]).then(function (data) {
   //Reading in barchart data
   bData = data[0];
 
@@ -80,6 +80,8 @@ function gen_vis() {
   var map_max = 2000;
   var map_min = 0;
 
+  var ramp = d3.scaleLinear().domain([map_min, map_max]).range([lowColor, highColor])
+
   let map_svg = d3.select("#map").append("svg")
     .attr("width", idiomWidth)
     .attr("height", idiomHeight);
@@ -92,18 +94,64 @@ function gen_vis() {
     .classed("highlighted", d => curDistrict == "Amsterdam" || curDistrict == d.properties.Stadsdeel ? true : false)
     .classed("district", true)
     .attr("d", path)
-    .on("mouseover", function(value, index) {
+    .on("mouseover", function (value, index) {
       tooltip.style("display", "block");
       tooltip.html(value.properties.Stadsdeel + ": " + map_datasetListings[curYear - 1][value.properties.Stadsdeel]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
     })
     .on("mousemove", () => tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px"))
     .on("mouseout", () => tooltip.style("display", "none"))
     .style("fill", d => map_sequentialScale(map_datasetListings[curYear - 1][d.properties.Stadsdeel]))
-    .on("click", function(value) {
+    .on("click", function (value) {
       d3.select("#selector").node().value = value.properties.Stadsdeel;
       d3.select("#selector").node().dispatchEvent(new Event('input'));
     })
     .classed("clickable", true);
+
+  var legend_w = 70, legend_h = 200;
+  var lowColor = map_sequentialScale(map_min)
+  var highColor = map_sequentialScale(map_max)
+
+  var key = d3.select("#map")
+    .append("svg")
+    .attr("width", legend_w)
+    .attr("height", legend_h)
+    .attr("class", "legend");
+
+  var legend = key.append("defs")
+    .append("svg:linearGradient")
+    .attr("id", "gradient")
+    .attr("x1", "100%")
+    .attr("y1", "0%")
+    .attr("x2", "100%")
+    .attr("y2", "100%")
+    .attr("spreadMethod", "pad");
+
+  legend.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", highColor)
+    .attr("stop-opacity", 1);
+
+  legend.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", lowColor)
+    .attr("stop-opacity", 1);
+
+  key.append("rect")
+    .attr("width", legend_w - 50)
+    .attr("height", legend_h)
+    .style("fill", "url(#gradient)")
+    .attr("transform", "translate(0,10)");
+
+  var y = d3.scaleLinear()
+    .range([legend_h, 0])
+    .domain([map_min, map_max]);
+
+  var yAxis = d3.axisRight(y);
+
+  key.append("g")
+    .attr("class", "y axis")
+    .attr("transform", "translate(30,10)")
+    .call(yAxis)
 
   function update_radarchart_dataset() {
     var radarchart_dataset = [];
@@ -154,10 +202,10 @@ function gen_vis() {
 
   //Calculates x and y coordinate based on value and index
   let radarchart_line = d3.line()
-    .x(function(value, index) {
+    .x(function (value, index) {
       return indexToCoordinate(index, value).x;
     })
-    .y(function(value, index) {
+    .y(function (value, index) {
       return indexToCoordinate(index, value).y;
     });
 
@@ -207,7 +255,7 @@ function gen_vis() {
     .datum(radarchart_dataset).attr("d", radarchart_line)
     .attr("transform", "translate(" + idiomWidth / 2 + "," + idiomHeight / 2 + ")")
     //added exact values on hover but has to update on district/year change
-    .on("mouseover", function(value) {
+    .on("mouseover", function (value) {
       tooltip.style("display", "block");
       tooltip.html("Criminality: " + radarchart_dataset[0] +
         "<br/>Nuisance: " + radarchart_dataset[1] +
@@ -215,13 +263,13 @@ function gen_vis() {
         "<br/>Persons inconvenience: " + radarchart_dataset[3] +
         "<br/>Safety: " + radarchart_dataset[4]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 124) + "px");
     })
-    .on("mousemove", function() {
+    .on("mousemove", function () {
       tooltip.style("top", (event.pageY - 124) + "px").style("left", (event.pageX) + "px");
     })
-    .on("mouseout", function() {
+    .on("mouseout", function () {
       tooltip.style("display", "none");
     });
-    
+
 
   let bSvg = d3.select("#bar-chart")
     .append("svg")
@@ -253,13 +301,13 @@ function gen_vis() {
     .attr("width", bBarWidth)
     .attr("transform", translate(axesSpace.left, axesSpace.top))
     .classed("highlighted", d => d.district == curDistrict)
-    .on("mouseover", function(d) {
+    .on("mouseover", function (d) {
       tooltip.style("display", "block");
       tooltip.html(d.district + " people/year: " + d.value).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
     })
     .on("mousemove", () => tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px"))
     .on("mouseout", () => tooltip.style("display", "none"))
-    .on("click", function(d) {
+    .on("click", function (d) {
       d3.select("#selector").node().value = d.district;
       d3.select("#selector").node().dispatchEvent(new Event('input'));
     })
@@ -276,7 +324,7 @@ function gen_vis() {
     .classed("axis values clickable", true)
     .selectAll("text")
     .attr("transform", translate(-10, bY(bYMin) - bXAxisPosition + 20) + "rotate(-45)")
-    .on("click", function(d) {
+    .on("click", function (d) {
       d3.select("#selector").node().value = d;
       d3.select("#selector").node().dispatchEvent(new Event('input'));
     });
@@ -308,12 +356,12 @@ function gen_vis() {
     .attr("transform", translate(axesSpace.left, axesSpace.top));
 
   lSvg.append("g").call(d3.axisBottom(lX)
-      .ticks(lXDomain.length)
-      .tickFormat(d3.format("d")))
+    .ticks(lXDomain.length)
+    .tickFormat(d3.format("d")))
     .attr("transform", translate(axesSpace.left, axesSpace.top + graphHeight))
     .selectAll("text")
     .classed("clickable", true)
-    .on("click", function(d) {
+    .on("click", function (d) {
       d3.select("#year-slider").node().value = d;
       d3.select("#year-slider").node().dispatchEvent(new Event('input'));
     });
@@ -336,10 +384,10 @@ function gen_vis() {
 
 
   //Interactivity
-  d3.select("#year-slider").on("input", function() {
+  d3.select("#year-slider").on("input", function () {
     curYear = document.getElementById("year-slider").value;
 
-    map_svg.selectAll("path").style("fill", function(value) {
+    map_svg.selectAll("path").style("fill", function (value) {
       return map_sequentialScale(map_datasetListings[curYear - 1][value.properties.Stadsdeel]);
     });
 
@@ -371,7 +419,7 @@ function gen_vis() {
     radarchart_lines.transition().duration(transitionSpeed).attr("d", radarchart_line);
   });
 
-  d3.select("#selector").on("input", function() {
+  d3.select("#selector").on("input", function () {
     curDistrict = d3.select("#selector").node().value;
 
     bSvg.selectAll(".bar")
@@ -405,13 +453,13 @@ function gen_vis() {
 }
 
 function getMax(datasetValues) {
-  return Math.max.apply(Math, Object.values(datasetValues).map(function(row) {
+  return Math.max.apply(Math, Object.values(datasetValues).map(function (row) {
     return Math.max.apply(Math, row);
   }));
 }
 
 function getMin(datasetValues) {
-  return Math.min.apply(Math, Object.values(datasetValues).map(function(row) {
+  return Math.min.apply(Math, Object.values(datasetValues).map(function (row) {
     return Math.min.apply(Math, row);
   }));
 }
