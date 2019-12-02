@@ -50,8 +50,8 @@ Promise.all([
   d3.json("/data/line_chart/prices.json"),
   d3.json("/data/radar_chart/indicators.json"),
   d3.json("/data/map/GEBIED_STADSDELEN.json"),
-  d3.json("/data/map/test.json")
-]).then(function (data) {
+  d3.json("/data/map/neighborhood_number_of_listings.json")
+]).then(function(data) {
   //Reading in barchart data
   bData = data[0];
 
@@ -77,7 +77,7 @@ function gen_vis() {
   var projection = d3.geoMercator().translate([idiomWidth / 2, idiomHeight / 2]).scale(60000).center([4.9, 52.36]);
   var path = d3.geoPath().projection(projection);
 
-  var map_max = 2000;
+  var map_max = 5000;
   var map_min = 0;
 
   var ramp = d3.scaleLinear().domain([map_min, map_max]).range([lowColor, highColor])
@@ -91,18 +91,24 @@ function gen_vis() {
     .interpolator(d3.interpolateGreens);
 
   map_svg.selectAll("path").data(map_datasetMap.features).enter().append("path")
-    .classed("highlighted", d => curDistrict == "Amsterdam" || curDistrict == d.properties.Stadsdeel ? true : false)
+    .classed("highlighted", d => curDistrict == "Amsterdam"
+      || curDistrict == d.properties.Stadsdeel
+      || (curDistrict == "Nieuw-West" && d.properties.Stadsdeel == "Westpoort") ? true : false)
     .classed("district", true)
     .attr("d", path)
     .on("mouseover", function (value, index) {
       tooltip.style("display", "block");
-      tooltip.html(value.properties.Stadsdeel + ": " + map_datasetListings[curYear - 1][value.properties.Stadsdeel]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
+      tooltip.html(value.properties.Stadsdeel + ": " + map_datasetListings[curYear][value.properties.Stadsdeel]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
     })
     .on("mousemove", () => tooltip.style("top", (event.pageY - 40) + "px").style("left", (event.pageX) + "px"))
     .on("mouseout", () => tooltip.style("display", "none"))
-    .style("fill", d => map_sequentialScale(map_datasetListings[curYear - 1][d.properties.Stadsdeel]))
-    .on("click", function (value) {
-      d3.select("#selector").node().value = value.properties.Stadsdeel;
+    .style("fill", d => map_sequentialScale(map_datasetListings[curYear][d.properties.Stadsdeel]))
+    .on("click", function(value) {
+      if (value.properties.Stadsdeel == "Westpoort") {
+          d3.select("#selector").node().value = "Nieuw-West";
+      } else {
+        d3.select("#selector").node().value = value.properties.Stadsdeel;
+      }
       d3.select("#selector").node().dispatchEvent(new Event('input'));
     })
     .classed("clickable", true);
@@ -387,8 +393,8 @@ function gen_vis() {
   d3.select("#year-slider").on("input", function () {
     curYear = document.getElementById("year-slider").value;
 
-    map_svg.selectAll("path").style("fill", function (value) {
-      return map_sequentialScale(map_datasetListings[curYear - 1][value.properties.Stadsdeel]);
+    map_svg.selectAll("path").style("fill", function(value) {
+      return map_sequentialScale(map_datasetListings[curYear][value.properties.Stadsdeel]);
     });
 
     bSvg.selectAll("rect")
@@ -426,7 +432,10 @@ function gen_vis() {
       .classed("highlighted", d => d.district == curDistrict);
 
     map_svg.selectAll("path")
-      .classed("highlighted", d => curDistrict == "Amsterdam" || curDistrict == d.properties.Stadsdeel ? true : false)
+      .classed("highlighted", d => curDistrict == "Amsterdam"
+        || curDistrict == d.properties.Stadsdeel
+        || (curDistrict == "Westpoort" && d.properties.Stadsdeel == "Nieuw-West")
+        || (curDistrict == "Nieuw-West" && d.properties.Stadsdeel == "Westpoort") ? true : false)
       .attr("d", path);
 
     lSvg.selectAll(".line")
