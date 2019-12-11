@@ -70,11 +70,7 @@ Promise.all([
 
 function gen_vis() {
 
-    // function processPosition(string, position) {
-    //   return parseFloat(string.substring(0, position) + "." + string.substring(position));
-    // }
-
-    var projection = d3.geoMercator().translate([idiomWidth / 2, idiomHeight / 2]).scale(60000).center([4.9, 52.36]);
+    var projection = d3.geoMercator().translate([idiomWidth / 2, idiomHeight / 2]).scale(60000).center([4.85, 52.355]);
     var path = d3.geoPath().projection(projection);
 
     var map_max = 5000;
@@ -85,55 +81,10 @@ function gen_vis() {
         .domain([map_min, map_max])
         .interpolator(d3.interpolateGreens);
 
-    var ramp = d3.scaleLinear().domain([map_min, map_max]).range([lowColor, highColor])
-
-    var legend_w = 70,
-        legend_h = 200;
+    var legend_w = 30,
+        legend_h = idiomHeight - axesSpace.top - axesSpace.bottom;
     var lowColor = map_sequentialScale(map_min)
     var highColor = map_sequentialScale(map_max)
-
-    var key = d3.select("#map")
-        .append("svg")
-        .attr("width", legend_w)
-        .attr("height", legend_h)
-        .attr("class", "legend");
-
-    var legend = key.append("defs")
-        .append("svg:linearGradient")
-        .attr("id", "gradient")
-        .attr("x1", "100%")
-        .attr("y1", "0%")
-        .attr("x2", "100%")
-        .attr("y2", "100%")
-        .attr("spreadMethod", "pad");
-
-    legend.append("stop")
-        .attr("offset", "0%")
-        .attr("stop-color", highColor)
-        .attr("stop-opacity", 1);
-
-    legend.append("stop")
-        .attr("offset", "100%")
-        .attr("stop-color", lowColor)
-        .attr("stop-opacity", 1);
-
-    key.append("rect")
-        .attr("width", legend_w - 50)
-        .attr("height", legend_h)
-        .style("fill", "url(#gradient)")
-        .attr("transform", "translate(0,10)");
-
-    var y = d3.scaleLinear()
-        .range([legend_h, 0])
-        .domain([map_min, map_max]);
-
-    var yAxis = d3.axisRight(y);
-
-    key.append("g")
-        .attr("class", "y axis")
-        .attr("transform", "translate(30,10)")
-        .call(yAxis)
-
 
     let map_svg = d3.select("#map").append("svg")
         .attr("width", idiomWidth)
@@ -161,6 +112,41 @@ function gen_vis() {
             d3.select("#selector").node().dispatchEvent(new Event('input'));
         })
         .classed("clickable", true);
+
+    var legend = map_svg.append("defs")
+        .append("svg:linearGradient")
+        .attr("id", "gradient")
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "0%")
+        .attr("y2", "100%")
+        .attr("spreadMethod", "pad");
+
+    legend.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", highColor)
+        .attr("stop-opacity", 1);
+
+    legend.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", lowColor)
+        .attr("stop-opacity", 1);
+
+    map_svg.append("rect")
+        .attr("width", legend_w)
+        .attr("height", legend_h)
+        .style("fill", "url(#gradient)")
+        .attr("transform", translate(axesSpace.left, axesSpace.top));
+
+    let map_y = d3.scaleLinear()
+        .range([legend_h, 0])
+        .domain([map_min, map_max]);
+
+    map_svg.append("g")
+        .attr("class", "y axis")
+        .attr("transform", translate(axesSpace.left, axesSpace.top))
+        .call(d3.axisLeft(map_y));
+
 
     function update_radarchart_dataset() {
         var radarchart_dataset = [];
