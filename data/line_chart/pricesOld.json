@@ -1,0 +1,181 @@
+[{
+    "year": 2015,
+    "price": [{
+        "district": "Amsterdam",
+        "value": 112
+      },
+      {
+        "district": "Centrum",
+        "value": 163
+      },
+      {
+        "district": "West",
+        "value": 116
+      },
+      {
+        "district": "Nieuw-West",
+        "value": 102
+      },
+      {
+        "district": "Zuid",
+        "value": 129
+      },
+      {
+        "district": "Oost",
+        "value": 118
+      },
+      {
+        "district": "Noord",
+        "value": 107
+      },
+      {
+        "district": "Zuidoost",
+        "value": 64
+      }
+    ]
+  },
+  {
+    "year": 2016,
+    "price": [{
+        "district": "Amsterdam",
+        "value": 115
+      },
+      {
+        "district": "Centrum",
+        "value": 165
+      },
+      {
+        "district": "West",
+        "value": 116
+      },
+      {
+        "district": "Nieuw-West",
+        "value": 102
+      },
+      {
+        "district": "Zuid",
+        "value": 133
+      },
+      {
+        "district": "Oost",
+        "value": 126
+      },
+      {
+        "district": "Noord",
+        "value": 113
+      },
+      {
+        "district": "Zuidoost",
+        "value": 70
+      }
+    ]
+  },
+  {
+    "year": 2017,
+    "price": [{
+        "district": "Amsterdam",
+        "value": 123
+      },
+      {
+        "district": "Centrum",
+        "value": 174
+      },
+      {
+        "district": "West",
+        "value": 126
+      },
+      {
+        "district": "Nieuw-West",
+        "value": 110
+      },
+      {
+        "district": "Zuid",
+        "value": 138
+      },
+      {
+        "district": "Oost",
+        "value": 132
+      },
+      {
+        "district": "Noord",
+        "value": 119
+      },
+      {
+        "district": "Zuidoost",
+        "value": 82
+      }
+    ]
+  },
+  {
+    "year": 2018,
+    "price": [{
+        "district": "Amsterdam",
+        "value": 132
+      },
+      {
+        "district": "Centrum",
+        "value": 185
+      },
+      {
+        "district": "West",
+        "value": 131
+      },
+      {
+        "district": "Nieuw-West",
+        "value": 115
+      },
+      {
+        "district": "Zuid",
+        "value": 150
+      },
+      {
+        "district": "Oost",
+        "value": 140
+      },
+      {
+        "district": "Noord",
+        "value": 131
+      },
+      {
+        "district": "Zuidoost",
+        "value": 93
+      }
+    ]
+  },
+  {
+    "year": 2019,
+    "price": [{
+        "district": "Amsterdam",
+        "value": 140
+      },
+      {
+        "district": "Centrum",
+        "value": 201
+      },
+      {
+        "district": "West",
+        "value": 138
+      },
+      {
+        "district": "Nieuw-West",
+        "value": 121
+      },
+      {
+        "district": "Zuid",
+        "value": 170
+      },
+      {
+        "district": "Oost",
+        "value": 147
+      },
+      {
+        "district": "Noord",
+        "value": 137
+      },
+      {
+        "district": "Zuidoost",
+        "value": 93
+      }
+    ]
+  }
+]

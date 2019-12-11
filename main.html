@@ -7,34 +7,90 @@
 <html>
 
 <head>
-  <title>Bar chart</title>
-  <link rel="stylesheet" href="main.css">
-  <link rel="stylesheet" href="linechart.css">
-  <script src="https://d3js.org/d3.v5.min.js" charset="utf-8"></script>
+    <title>Impact of tourism on Amsterdam</title>
+    <meta charset="UTF-8">
+
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+
+    <script src="/js/d3/d3.js" charset="utf-8"></script>
+    <script src="/js/jquery-3.3.1.slim.min.js"></script>
+    <script src="/js/popper.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
 </head>
 
-<body>
-  <div id="chart-container">
-    <div id="map"></div>
-    <div id="bar-chart"></div>
-    <div id="line-chart"></div>
-    <div id="radio-chart"></div>
-  </div>
-  <div id="selectors">
-    <select name="districts">
-      <option value="Amsterdam">Amsterdam</option>
-      <option value="Centrum">Centrum</option>
-      <option value="Westpoort">Westpoort</option>
-      <option value="West">West</option>
-      <option value="Niew-West">Niew-West</option>
-      <option value="Zuid">Zuid</option>
-      <option value="Oost">Oost</option>
-      <option value="Noord">Noord</option>
-      <option value="Zuidoost">Zuidoost</option>
-    </select>
-  </div>
-  <script src="main.js"></script>
-  <!--connects to the javascript file, bundle created by npm install and then npm build-->
-  <script src="linechart.js"></script>
+<body class="">
+    <div id="chart-container" class="container align-items-center ">
+        <div class="row justify-content-md-center mt-4">
+            <h3>Impact of tourism on Amsterdam</h3>
+        </div>
+        <div class="row justify-content-md-center mt-4">
+            <div class="col text-center">
+                <h5 class="font-weight-normal">AirBnB listings</h5>
+                <div id="map"></div>
+            </div>
+            <div class="col text-center">
+                <h5 class="font-weight-normal">Migration per district</h5>
+                <div id="bar-chart"></div>
+
+            </div>
+            <div class="w-100 my-3"></div>
+            <div class="col text-center">
+                <h5 class="font-weight-normal">Average AirBnB listing price</h5>
+                <div id="line-chart"></div>
+            </div>
+            <div class="col text-center">
+                <h5 class="font-weight-normal">Indicators inhabitants</h5>
+                <div id="radar-chart"></div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid fixed-bottom bg-secondary">
+        <div class="container py-3">
+            <div class="row justify-content-md-center align-items-center">
+                <div id="selector-container" class="col-2">
+                    <select id="selector" name="districts" class="form-control">
+            <option value="Amsterdam">Amsterdam</option>
+            <option value="Centrum">Centrum</option>
+            <option value="West">West</option>
+            <option value="Nieuw-West">Nieuw-West</option>
+            <option value="Zuid">Zuid</option>
+            <option value="Oost">Oost</option>
+            <option value="Noord">Noord</option>
+            <option value="Zuidoost">Zuidoost</option>
+          </select>
+                </div>
+                <div id="range-container" class="col-4">
+                    <div class="row align-items-center text-white">
+                        <input type="range" class="custom-range px-4" min="2015" max="2019" value="2019" id="year-slider">
+
+                        <div class="w-100"></div>
+                        <div class="col text-left ">
+                            2015
+                        </div>
+                        <div class="col text-center ">
+                            2016
+                        </div>
+                        <div class="col text-center ">
+                            2017
+                        </div>
+                        <div class="col text-center ">
+                            2018
+                        </div>
+                        <div class="col text-right">
+                            2019
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <script src="/js/main.js"></script>
+    <!-- <script src="linechart.js"></script> -->
 </body>
+
 </html>
