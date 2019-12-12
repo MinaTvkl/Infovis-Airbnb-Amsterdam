@@ -29,7 +29,7 @@ function translate(x, y) {
 
 var axesSpace = {
     top: 20,
-    right: 20,
+    right: 60,
     bottom: 50,
     left: 60
 }
@@ -83,17 +83,19 @@ function gen_vis() {
 
     var legend_w = 30,
         legend_h = idiomHeight - axesSpace.top - axesSpace.bottom;
-    var lowColor = map_sequentialScale(map_min)
-    var highColor = map_sequentialScale(map_max)
+    var lowColor = map_sequentialScale(map_min);
+    var highColor = map_sequentialScale(map_max);
 
     let map_svg = d3.select("#map").append("svg")
         .attr("width", idiomWidth)
         .attr("height", idiomHeight);
 
-    map_svg.selectAll("path").data(map_datasetMap.features).enter().append("path")
-        .classed("highlighted", d => curDistrict == "Amsterdam" ||
+    let map_topo = map_svg;
+
+    map_topo.selectAll("path").data(map_datasetMap.features).enter().append("path")
+        .attr("opacity", d => curDistrict == "Amsterdam" ||
             curDistrict == d.properties.Stadsdeel ||
-            (curDistrict == "Nieuw-West" && d.properties.Stadsdeel == "Westpoort") ? true : false)
+            (curDistrict == "Nieuw-West" && d.properties.Stadsdeel == "Westpoort") ? 1 : 0.2)
         .classed("district", true)
         .attr("d", path)
         .on("mouseover", function(value, index) {
@@ -113,7 +115,9 @@ function gen_vis() {
         })
         .classed("clickable", true);
 
-    var legend = map_svg.append("defs")
+    let map_legend = map_svg;
+
+    var legend = map_legend.append("defs")
         .append("svg:linearGradient")
         .attr("id", "gradient")
         .attr("x1", "0%")
@@ -132,7 +136,8 @@ function gen_vis() {
         .attr("stop-color", lowColor)
         .attr("stop-opacity", 1);
 
-    map_svg.append("rect")
+
+    map_legend.append("rect")
         .attr("width", legend_w)
         .attr("height", legend_h)
         .style("fill", "url(#gradient)")
@@ -142,11 +147,10 @@ function gen_vis() {
         .range([legend_h, 0])
         .domain([map_min, map_max]);
 
-    map_svg.append("g")
+    map_legend.append("g")
         .attr("class", "y axis")
         .attr("transform", translate(axesSpace.left, axesSpace.top))
         .call(d3.axisLeft(map_y));
-
 
     function update_radarchart_dataset() {
         var radarchart_dataset = [];
@@ -256,10 +260,11 @@ function gen_vis() {
                 "<br/>Nuisance: " + radarchart_dataset[1] +
                 "<br/>Persons avoidance: " + radarchart_dataset[2] +
                 "<br/>Persons inconvenience: " + radarchart_dataset[3] +
-                "<br/>Safety: " + radarchart_dataset[4]).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 124) + "px");
+                "<br/>Safety: " + radarchart_dataset[4] +
+                "<hr>Index from 0 to 300, lower is better").style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 180) + "px");
         })
         .on("mousemove", function() {
-            tooltip.style("top", (event.pageY - 124) + "px").style("left", (event.pageX) + "px");
+            tooltip.style("top", (event.pageY - 180) + "px").style("left", (event.pageX) + "px");
         })
         .on("mouseout", function() {
             tooltip.style("display", "none");
@@ -295,7 +300,8 @@ function gen_vis() {
         .attr("height", d => d.value < 0 ? bY(d.value) - bXAxisPosition : bYPositive(d.value))
         .attr("width", bBarWidth)
         .attr("transform", translate(axesSpace.left, axesSpace.top))
-        .classed("highlighted", d => d.district == curDistrict)
+        .attr("opacity", d => d.district == curDistrict ? 1 : 0.2)
+        // .classed("highlighted", d => d.district == curDistrict)
         .on("mouseover", function(d) {
             tooltip.style("display", "block");
             tooltip.html(d.district + " people/year: " + d.value).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
@@ -369,7 +375,7 @@ function gen_vis() {
         .attr("cx", d => lX(d.year))
         .attr("cy", d => lY(d.value))
         .attr("r", 7)
-        .attr("transform", "translate(" + axesSpace.left + "," + axesSpace.top + ")")
+        .attr("transform", translate(axesSpace.left, axesSpace.top))
         .on("mouseover", d => {
             tooltip.style("display", "block");
             tooltip.html("€/night: " + d.value).style("left", (d3.event.pageX) + "px").style("top", (d3.event.pageY - 40) + "px");
@@ -382,7 +388,7 @@ function gen_vis() {
     d3.select("#year-slider").on("input", function() {
         curYear = document.getElementById("year-slider").value;
 
-        map_svg.selectAll("path").style("fill", function(value) {
+        map_svg.selectAll(".district").transition().duration(transitionSpeed).style("fill", function(value) {
             return map_sequentialScale(map_datasetListings[curYear][value.properties.Stadsdeel]);
         });
 
@@ -417,14 +423,13 @@ function gen_vis() {
     d3.select("#selector").on("input", function() {
         curDistrict = d3.select("#selector").node().value;
 
-        bSvg.selectAll(".bar")
-            .classed("highlighted", d => d.district == curDistrict);
+        bSvg.selectAll(".bar").transition().duration(transitionSpeed).attr("opacity", d => d.district == curDistrict ? 1 : 0.2);
+        // .classed("highlighted", d => d.district == curDistrict);
 
-        map_svg.selectAll("path")
-            .classed("highlighted", d => curDistrict == "Amsterdam" ||
+        map_topo.selectAll(".district").transition().duration(transitionSpeed)
+            .attr("opacity", d => curDistrict == "Amsterdam" ||
                 curDistrict == d.properties.Stadsdeel ||
-                (curDistrict == "Westpoort" && d.properties.Stadsdeel == "Nieuw-West") ||
-                (curDistrict == "Nieuw-West" && d.properties.Stadsdeel == "Westpoort") ? true : false)
+                (curDistrict == "Nieuw-West" && d.properties.Stadsdeel == "Westpoort") ? 1 : 0.2)
             .attr("d", path);
 
         lSvg.selectAll(".line")

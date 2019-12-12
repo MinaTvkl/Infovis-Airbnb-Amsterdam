@@ -1,5 +1,5 @@
 :root {
-    --gray: rgb(160, 160, 160);
+    --gray: rgb(150, 150, 150);
 }
 
 .line {
@@ -7,7 +7,6 @@
     stroke: var(--blue);
     fill: rgba(255, 255, 255, 0);
     stroke-opacity: 0.8;
-    /* background-color:  */
 }
 
 .helpaxis {
@@ -36,12 +35,14 @@
 
 .bar {
     fill: var(--green);
-    opacity: 0.2;
+    /* opacity: 0.2; */
 }
 
+
+/* 
 .bar.highlighted {
     opacity: 1;
-}
+} */
 
 .dot {
     fill: var(--blue);
@@ -52,12 +53,13 @@
 
 .district {
     fill: none;
-    opacity: 0.2;
+    /* opacity: 0.2; */
 }
 
-.district.highlighted {
+
+/* .district.highlighted {
     opacity: 1;
-}
+} */
 
 .tooltip {
     display: none;
@@ -72,19 +74,12 @@
     position: relative;
 }
 
-.title::after {
-    content: 'i';
+.infotip {
     position: absolute;
     right: 0px;
-    bottom: 0;
-    display: block;
-    height: 20px;
-    width: 20px;
-    line-height: 20px;
-    -moz-border-radius: 50%;
-    border-radius: 50%;
-    background-color: darkgrey;
-    color: white;
-    text-align: center;
-    font-size: 0.7em;
+    top: 0px;
+}
+
+.bg-gray {
+    background-color: var(--gray);
 }
